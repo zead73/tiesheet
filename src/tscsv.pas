@@ -23,8 +23,10 @@ procedure ParseCsv(const text: UnicodeString; delim: WideChar; out rows: TCsvRow
 function CsvField(const s: UnicodeString; delim: WideChar): UnicodeString;
 
 { Puts the rows into the sheet, which should be empty.  A field starting with = is a formula; one that
-  cannot be read, or a whole number with leading zeros (007), stays text.  Returns the cells filled. }
-function ImportCsv(sheet: TSheet; const text: UnicodeString; warnings: TStrings): Integer;
+  cannot be read, or a whole number with leading zeros (007), stays text.  Returns the cells filled.
+  native: the text is the body of a TieSheet file, which is always comma separated and whose cells are
+  read exactly as they were typed (so 007 is the number 7, as it was when typed). }
+function ImportCsv(sheet: TSheet; const text: UnicodeString; warnings: TStrings; native: Boolean = False): Integer;
 function ExportCsv(sheet: TSheet; valuesOnly: Boolean): UnicodeString;
 
 function ReadTextFile(const fn: string; out text: UnicodeString): string;      { '' or the reason }
@@ -225,7 +227,7 @@ begin
     if (f[i] < '0') or (f[i] > '9') then Exit(False);
 end;
 
-function ImportCsv(sheet: TSheet; const text: UnicodeString; warnings: TStrings): Integer;
+function ImportCsv(sheet: TSheet; const text: UnicodeString; warnings: TStrings; native: Boolean): Integer;
 var
   rows: TCsvRows;
   r, c: Integer;
@@ -233,7 +235,7 @@ var
   err: string;
 begin
   Result := 0;
-  ParseCsv(text, DetectDelimiter(text), rows);
+  if native then ParseCsv(text, ',', rows) else ParseCsv(text, DetectDelimiter(text), rows);
   for r := 0 to High(rows) do
     for c := 0 to High(rows[r]) do
     begin
@@ -244,7 +246,7 @@ begin
         if warnings <> nil then warnings.Add('Row ' + IntToStr(r + 1) + ', column ' + IntToStr(c + 1) + ' is outside the sheet');
         Continue;
       end;
-      if LeadingZeroCode(f) then f := '''' + f;
+      if (not native) and LeadingZeroCode(f) then f := '''' + f;
       err := sheet.SetEntry(c, r, f);
       if err <> '' then
       begin

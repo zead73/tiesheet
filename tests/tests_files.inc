@@ -194,6 +194,28 @@ begin
     sh.SetEntry(0, 0, '$5.00');
     sh.SetEntry(0, 1, '2026-11-10');
     CheckEq(string(SheetToText(sh)), 'tiesheet 1'#10'---'#10'$5.00'#10'2026-11-10'#10, 'what typing gives is not repeated');
+    { what typing gave must come back as it was, whatever it looks like to a CSV reader }
+    sh.Clear;
+    sh.SetEntry(0, 0, '007');
+    sh.SetEntry(0, 1, '-012');
+    sh.SetEntry(0, 2, 'Note; see below');
+    sh.SetEntry(0, 3, 'a'#9'b');
+    sh.SetEntry(0, 4, '''007');
+    sh.SetEntry(0, 5, '=A1+1');
+    text := SheetToText(sh);
+    CheckEq(SheetFromText(sh2, text, warn), '', 'read back the awkward cells');
+    CheckEq(string(sh2.Display(0, 0)), '7', '007 was typed as a number and stays one');
+    Check(sh2.GetKind(0, 0) = ckNumber, 'still a number');
+    CheckEq(string(sh2.Display(0, 1)), '-12', '-012 too');
+    CheckEq(string(sh2.Display(0, 2)), 'Note; see below', 'a semicolon in the first cell does not change the delimiter');
+    CheckEq(string(sh2.Display(0, 3)), 'a'#9'b', 'nor does a tab');
+    CheckEq(string(sh2.Display(0, 4)), '007', 'text typed with an apostrophe stays text');
+    CheckEq(string(sh2.Display(0, 5)), '8', 'and the formula reads the number');
+    CheckEq(string(SheetToText(sh2)), string(text), 'and the file is stable');
+    sh.Clear;
+    sh.SetEntry(0, 0, 'Note; see below');
+    CheckEq(SheetFromText(sh2, SheetToText(sh), warn), '', 'a one-column sheet');
+    CheckEq(string(sh2.Display(0, 0)), 'Note; see below', 'is not split');
     { not ours, and newer }
     Check(SheetFromText(sh2, 'hello', nil) <> '', 'not a TieSheet file');
     Check(SheetFromText(sh2, 'tiesheet 1'#10'a,b'#10, nil) <> '', 'no --- line');

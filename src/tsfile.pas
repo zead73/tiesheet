@@ -187,7 +187,7 @@ begin
         Warn('Ignored the line: ' + string(line));
     end;
     body := Copy(text, pos0, MaxInt);
-    ImportCsv(sheet, body, warnings);
+    ImportCsv(sheet, body, warnings, True);
     { formats go on after the cells exist }
     for i := 0 to fmtLines.Count - 1 do
     begin
