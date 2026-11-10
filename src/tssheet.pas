@@ -27,6 +27,7 @@ type
   end;
 
   TCellKind = (ckNumber, ckText, ckBool, ckFormula);
+  TIntArray = array of Integer;
 
   TCell = class
   public
@@ -53,6 +54,7 @@ type
   private
     FCells: specialize TDictionary<Int64, TCell>;
     FDirty: Boolean;
+    FWidths: specialize TDictionary<Integer, Integer>;
     function Key(col, row: Integer): Int64;
     function Find(col, row: Integer): TCell;
     procedure Evaluate(root: TCell);
@@ -77,12 +79,23 @@ type
     function CellCount: Integer;
     function Extent(out lastCol, lastRow: Integer): Boolean;           { the used area }
     procedure Recalc;
+    { everything is worked out again at the next read; for when something outside the cells changed, such as the date }
+    procedure Invalidate;
+    procedure Clear;                                                   { every cell and width }
+    function ColWidth(col: Integer): Integer;                          { in characters }
+    procedure SetColWidth(col, width: Integer);                        { the default width removes the entry }
+    function CustomWidthCols: TIntArray;                               { columns with their own width, in order }
     { copies a cell, shifting the relative references of a formula; '' or the reason }
     function CopyCell(sc, sr, dc, dr: Integer): string;
 
     function CellValue(col, row: Integer): TValue; override;
     procedure VisitStored(c1, r1, c2, r2: Integer; visit: TCellVisit); override;
   end;
+
+const
+  DEFAULT_COL_WIDTH = 12;
+  MIN_COL_WIDTH = 3;
+  MAX_COL_WIDTH = 100;
 
 function GeneralFormat: TFormat;
 function FormatValue(const v: TValue; const fmt: TFormat): UnicodeString;
@@ -313,6 +326,7 @@ constructor TSheet.Create;
 begin
   inherited Create;
   FCells := specialize TDictionary<Int64, TCell>.Create;
+  FWidths := specialize TDictionary<Integer, Integer>.Create;
   Today := TodaySerial;
 end;
 
@@ -322,6 +336,7 @@ var
 begin
   for c in FCells.Values do c.Free;
   FCells.Free;
+  FWidths.Free;
   inherited Destroy;
 end;
 
@@ -594,6 +609,8 @@ begin
     else if c.Mark = 1 then Exit(VErr(ecCirc));
   end;
   Result := c.Value;
+  { a cell shown as a date is a date to the formulas that read it, so date - date is a number of days }
+  if (c.Fmt.Kind = nfDate) and (Result.Kind = vkNum) then Result.IsDate := True;
 end;
 
 procedure TSheet.VisitStored(c1, r1, c2, r2: Integer; visit: TCellVisit);
@@ -671,6 +688,58 @@ begin
     if not ShiftFormula(src.Raw, dc - sc, dr - sr, text) then Exit('Cannot shift the formula');
   Result := SetEntry(dc, dr, text);
   if Result = '' then SetFormat(dc, dr, fmt);
+end;
+
+procedure TSheet.Clear;
+var
+  c: TCell;
+begin
+  for c in FCells.Values do c.Free;
+  FCells.Clear;
+  FWidths.Clear;
+  FDirty := True;
+end;
+
+function TSheet.ColWidth(col: Integer): Integer;
+begin
+  if not FWidths.TryGetValue(col, Result) then Result := DEFAULT_COL_WIDTH;
+end;
+
+procedure TSheet.SetColWidth(col, width: Integer);
+begin
+  if (col < 0) or (col > MAX_COL) then Exit;
+  if width < MIN_COL_WIDTH then width := MIN_COL_WIDTH;
+  if width > MAX_COL_WIDTH then width := MAX_COL_WIDTH;
+  if width = DEFAULT_COL_WIDTH then FWidths.Remove(col) else FWidths.AddOrSetValue(col, width);
+end;
+
+function TSheet.CustomWidthCols: TIntArray;
+var
+  k, n, i, j, tmp: Integer;
+begin
+  SetLength(Result, FWidths.Count);
+  n := 0;
+  for k in FWidths.Keys do
+  begin
+    Result[n] := k;
+    Inc(n);
+  end;
+  for i := 1 to n - 1 do
+  begin
+    tmp := Result[i];
+    j := i - 1;
+    while (j >= 0) and (Result[j] > tmp) do
+    begin
+      Result[j + 1] := Result[j];
+      Dec(j);
+    end;
+    Result[j + 1] := tmp;
+  end;
+end;
+
+procedure TSheet.Invalidate;
+begin
+  FDirty := True;
 end;
 
 end.

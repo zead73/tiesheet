@@ -3,12 +3,13 @@
 program test_engine;
 
 {$mode objfpc}{$H+}
+{$codepage utf8}
 {$IFDEF UNIX}{$DEFINE USECW}{$ENDIF}
 
 uses
   {$IFDEF USECW}cwstring,{$ENDIF}
   {$IFDEF WINDOWS}Windows,{$ENDIF}
-  SysUtils, Classes, tsdec, tsvalue, tsdate, tsformula, tssheet;
+  SysUtils, Classes, tsdec, tsvalue, tsdate, tsformula, tssheet, tscsv, tsfile;
 
 var
   Fails, Passes: Integer;
@@ -165,6 +166,7 @@ begin
 end;
 
 {$I tests_sheet.inc}
+{$I tests_files.inc}
 
 begin
   {$IFDEF WINDOWS}
@@ -181,6 +183,11 @@ begin
   TestRecalc;
   TestShifting;
   TestExtent;
+  TestDatedifOracle;
+  TestCsvParsing;
+  TestCsvSheet;
+  TestNativeFile;
+  TestFiles;
   WriteLn(Passes, ' passed, ', Fails, ' failed');
   if Fails > 0 then Halt(1);
 end.

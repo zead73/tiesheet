@@ -1,0 +1,4 @@
+Date,Name,Out,In,Total Days,Long form
+2023-10-27,Alex,Start,Finish,=TODAY() - A2,"=DATEDIF(A2, TODAY(), ""Y"") & "" Years, "" & DATEDIF(A2, TODAY(), ""YM"") & "" Months, "" & DATEDIF(A2, TODAY(), ""MD"") & "" Days"""
+2026-11-10,Sam,Job,,,
+2026-11-11,Parade,All,None,,

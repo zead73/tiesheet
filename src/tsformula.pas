@@ -167,7 +167,7 @@ type
   TFn = (fnSum, fnAverage, fnMin, fnMax, fnCount, fnCounta, fnProduct, fnAbs, fnRound, fnRoundUp,
     fnRoundDown, fnInt, fnMod, fnPower, fnSqrt, fnIf, fnAnd, fnOr, fnNot, fnIfError, fnTrue, fnFalse,
     fnLen, fnLeft, fnRight, fnMid, fnUpper, fnLower, fnTrim, fnConcat, fnValue, fnSumIf, fnCountIf,
-    fnAverageIf, fnDate, fnYear, fnMonth, fnDay, fnWeekday, fnToday, fnDays, fnEdate, fnIsBlank,
+    fnAverageIf, fnDate, fnYear, fnMonth, fnDay, fnWeekday, fnToday, fnDays, fnEdate, fnDatedif, fnIsBlank,
     fnIsNumber, fnIsText, fnIsError);
 
   TFuncInfo = record
@@ -177,7 +177,7 @@ type
   end;
 
 const
-  FuncTable: array[0..47] of TFuncInfo = (
+  FuncTable: array[0..48] of TFuncInfo = (
     (Name: 'SUM'; Id: fnSum; MinArgs: 1; MaxArgs: -1),
     (Name: 'AVERAGE'; Id: fnAverage; MinArgs: 1; MaxArgs: -1),
     (Name: 'MIN'; Id: fnMin; MinArgs: 1; MaxArgs: -1),
@@ -221,6 +221,7 @@ const
     (Name: 'TODAY'; Id: fnToday; MinArgs: 0; MaxArgs: 0),
     (Name: 'DAYS'; Id: fnDays; MinArgs: 2; MaxArgs: 2),
     (Name: 'EDATE'; Id: fnEdate; MinArgs: 2; MaxArgs: 2),
+    (Name: 'DATEDIF'; Id: fnDatedif; MinArgs: 3; MaxArgs: 3),
     (Name: 'ISBLANK'; Id: fnIsBlank; MinArgs: 1; MaxArgs: 1),
     (Name: 'ISNUMBER'; Id: fnIsNumber; MinArgs: 1; MaxArgs: 1),
     (Name: 'ISTEXT'; Id: fnIsText; MinArgs: 1; MaxArgs: 1),
@@ -1501,6 +1502,15 @@ begin
         if not ArgInt(n.Args[1], i2, ev) then Exit(ev);
         if not AddMonths(i, i2, i3) then Exit(VErr(ecNum));
         Result := VDate(DecFromInt(i3));
+      end;
+    fnDatedif:
+      begin
+        if not ArgSerial(n.Args[0], i, ev) then Exit(ev);
+        if not ArgSerial(n.Args[1], i2, ev) then Exit(ev);
+        v := Eval(n.Args[2]);
+        if v.Kind = vkErr then Exit(v);
+        if not DateDif(i, i2, string(TextOf(v)), i3) then Exit(VErr(ecNum));
+        Result := VInt(i3);
       end;
     fnIsBlank:
       begin

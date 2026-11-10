@@ -19,6 +19,10 @@ function SerialToIso(serial: Int64): string;
 function WeekdaySunday0(serial: Int64): Integer;                  { 0 = Sunday .. 6 = Saturday }
 function AddMonths(serial: Int64; months: Int64; out res: Int64): Boolean;   { the day is clamped to the month }
 function TodaySerial: Int64;
+{ DATEDIF as LibreOffice does it: unit Y, M, D, MD, YM or YD; False for an unknown unit or start after end.
+  (MD can come out negative in LibreOffice when the end day is before the start day and the month before
+  the end is shorter, e.g. 2024-01-31 to 2024-03-01; that is copied on purpose.) }
+function DateDif(startSerial, endSerial: Int64; const unitName: string; out res: Int64): Boolean;
 
 implementation
 
@@ -155,6 +159,49 @@ end;
 function TodaySerial: Int64;
 begin
   Result := Trunc(Now);       { a TDateTime counts days from 1899-12-30 too }
+end;
+
+function DateDif(startSerial, endSerial: Int64; const unitName: string; out res: Int64): Boolean;
+var
+  sy, sm, sd, ey, em, ed, py, pm: Integer;
+  months, d: Int64;
+  shifted: Int64;
+  u: string;
+begin
+  res := 0;
+  if (startSerial > endSerial) or (not SerialValid(startSerial)) or (not SerialValid(endSerial)) then Exit(False);
+  YMDFromSerial(startSerial, sy, sm, sd);
+  YMDFromSerial(endSerial, ey, em, ed);
+  u := UpperCase(unitName);
+  months := Int64(ey - sy) * 12 + (em - sm);
+  if ed < sd then Dec(months);
+  if u = 'Y' then res := months div 12
+  else if u = 'M' then res := months
+  else if u = 'D' then res := endSerial - startSerial
+  else if u = 'YM' then res := months mod 12
+  else if u = 'MD' then
+  begin
+    d := ed - sd;
+    if d < 0 then
+    begin
+      py := ey;
+      pm := em - 1;
+      if pm < 1 then begin pm := 12; Dec(py); end;
+      d := d + DaysInMonth(py, pm);
+    end;
+    res := d;
+  end
+  else if u = 'YD' then
+  begin
+    { the start moved into the end's year (a 29 February rolls to 1 March), or the year before }
+    if not SerialFromYMD(ey, sm, sd, shifted) then Exit(False);
+    if shifted > endSerial then
+      if not SerialFromYMD(ey - 1, sm, sd, shifted) then Exit(False);
+    res := endSerial - shifted;
+  end
+  else
+    Exit(False);
+  Result := True;
 end;
 
 end.

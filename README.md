@@ -3,18 +3,24 @@
 A small, keyboard-first spreadsheet in the style of [TiePaper](https://github.com/zead73/tiepaper):
 money, lists and schedules, no charts or pivot tables. For anything complicated, use LibreOffice.
 
-**Status: the calculation engine only.** There is no screen yet. What exists and is tested
-(558 checks, on Linux and under wine for Windows):
+**Status: the calculation engine and the files; no screen yet.** What exists and is tested
+(767 checks, on Linux and under wine for Windows):
 
 - exact decimal arithmetic (`0.1 + 0.2` is `0.3`, money adds up to the cent), 34 significant digits
-- formulas in the usual syntax, with `$A$1`, ranges, `&`, `%`, error values and 47 functions:
+- formulas in the usual syntax, with `$A$1`, ranges, `&`, `%`, error values and about 50 functions:
   SUM AVERAGE MIN MAX COUNT COUNTA PRODUCT, ABS ROUND ROUNDUP ROUNDDOWN INT MOD POWER SQRT,
   IF AND OR NOT IFERROR, SUMIF COUNTIF AVERAGEIF, LEN LEFT RIGHT MID UPPER LOWER TRIM CONCAT VALUE,
-  DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE, ISBLANK ISNUMBER ISTEXT ISERROR
+  DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF, ISBLANK ISNUMBER ISTEXT ISERROR
 - dates as serial numbers, the same as LibreOffice (serial 0 is 1899-12-30), shown as `2026-11-10`
 - what typing means: `12.50`, `$1,234.50`, `5%`, `2026-11-10`, `(5)`, `'text` ...
 - recalculation without recursion (a 20,000-row running balance is fine), loops show `#CIRC!`
 - copying a formula shifts its relative references
+- CSV in and out. Reading handles quotes, line breaks inside quotes, CRLF, a BOM and Latin-1, and a
+  `;` or tab delimiter. A field starting with `=` is a formula, so a CSV saved by LibreOffice with
+  formulas comes back as it was. Writing gives either the formulas as typed, or only the results (for
+  sharing, e.g. with Excel)
+- the TieSheet file (`.tsh`): the cells as CSV plus a small header for column widths and cell formats
+- saving keeps the old file as `.bak`
 
 Where the behaviour was in doubt it was checked against LibreOffice Calc (`tests/oracle/run.sh`).
 
