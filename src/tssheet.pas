@@ -55,6 +55,7 @@ type
     FCells: specialize TDictionary<Int64, TCell>;
     FDirty: Boolean;
     FWidths: specialize TDictionary<Integer, Integer>;
+    FColFmts: specialize TDictionary<Integer, TFormat>;
     function Key(col, row: Integer): Int64;
     function Find(col, row: Integer): TCell;
     procedure Evaluate(root: TCell);
@@ -85,6 +86,12 @@ type
     function ColWidth(col: Integer): Integer;                          { in characters }
     procedure SetColWidth(col, width: Integer);                        { the default width removes the entry }
     function CustomWidthCols: TIntArray;                               { columns with their own width, in order }
+    { a column's own format: numbers and formulas typed into it get it, unless typing gave them another }
+    function ColFormat(col: Integer): TFormat;
+    procedure SetColFormat(col: Integer; const fmt: TFormat);          { general removes it }
+    function CustomFormatCols: TIntArray;
+    { the format a cell has just from what was typed in it (and its column) }
+    function ExpectedFormat(col, row: Integer): TFormat;
     { copies a cell, shifting the relative references of a formula; '' or the reason }
     function CopyCell(sc, sr, dc, dr: Integer): string;
 
@@ -327,6 +334,7 @@ begin
   inherited Create;
   FCells := specialize TDictionary<Int64, TCell>.Create;
   FWidths := specialize TDictionary<Integer, Integer>.Create;
+  FColFmts := specialize TDictionary<Integer, TFormat>.Create;
   Today := TodaySerial;
 end;
 
@@ -337,6 +345,7 @@ begin
   for c in FCells.Values do c.Free;
   FCells.Free;
   FWidths.Free;
+  FColFmts.Free;
   inherited Destroy;
 end;
 
@@ -387,6 +396,7 @@ begin
   c.Kind := ent.Kind;
   c.Value := ent.Value;
   c.Fmt := ent.Fmt;
+  if (ent.Fmt.Kind = nfGeneral) and (ent.Kind in [ckNumber, ckFormula]) then c.Fmt := ColFormat(col);
   c.Node := node;
   c.Deps := deps;
   FDirty := True;
@@ -697,6 +707,7 @@ begin
   for c in FCells.Values do c.Free;
   FCells.Clear;
   FWidths.Clear;
+  FColFmts.Clear;
   FDirty := True;
 end;
 
@@ -740,6 +751,57 @@ end;
 procedure TSheet.Invalidate;
 begin
   FDirty := True;
+end;
+
+function TSheet.ColFormat(col: Integer): TFormat;
+begin
+  if not FColFmts.TryGetValue(col, Result) then Result := GeneralFormat;
+end;
+
+procedure TSheet.SetColFormat(col: Integer; const fmt: TFormat);
+begin
+  if (col < 0) or (col > MAX_COL) then Exit;
+  if fmt.Kind = nfGeneral then FColFmts.Remove(col) else FColFmts.AddOrSetValue(col, fmt);
+end;
+
+function TSheet.CustomFormatCols: TIntArray;
+var
+  k, n, i, j, tmp: Integer;
+begin
+  SetLength(Result, FColFmts.Count);
+  n := 0;
+  for k in FColFmts.Keys do
+  begin
+    Result[n] := k;
+    Inc(n);
+  end;
+  for i := 1 to n - 1 do
+  begin
+    tmp := Result[i];
+    j := i - 1;
+    while (j >= 0) and (Result[j] > tmp) do
+    begin
+      Result[j + 1] := Result[j];
+      Dec(j);
+    end;
+    Result[j + 1] := tmp;
+  end;
+end;
+
+function TSheet.ExpectedFormat(col, row: Integer): TFormat;
+var
+  c: TCell;
+  ent: TEntry;
+begin
+  Result := GeneralFormat;
+  c := Find(col, row);
+  if c = nil then Exit;
+  if c.Kind = ckFormula then Exit(ColFormat(col));
+  if ParseEntry(c.Raw, ent) then
+  begin
+    Result := ent.Fmt;
+    if (Result.Kind = nfGeneral) and (ent.Kind = ckNumber) then Result := ColFormat(col);
+  end;
 end;
 
 end.

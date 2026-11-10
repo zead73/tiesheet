@@ -55,17 +55,18 @@ var
   inRun: Boolean;
   lines: UnicodeString;
 
-  { the format a cell has beyond what its text would give }
+  { the format a cell has beyond what its text and its column would give }
   function Extra(col, row: Integer; out f: TFormat): Boolean;
   begin
     f := sheet.GetFormat(col, row);
     if not sheet.Exists(col, row) then Exit(False);
-    if sheet.GetKind(col, row) = ckFormula then
-      Result := not FormatsEqual(f, GeneralFormat)
-    else if TSheet.ParseEntry(sheet.GetRaw(col, row), ent) then
-      Result := not FormatsEqual(f, ent.Fmt)
-    else
-      Result := False;
+    Result := not FormatsEqual(f, sheet.ExpectedFormat(col, row));
+  end;
+
+  procedure EmitCol(col: Integer; const f: TFormat);
+  begin
+    lines := lines + UnicodeString(Format('colformat %s %s %d %s', [ColName(col), KindNames[f.Kind], f.Decimals,
+      BoolDigit(f.Thousands)])) + #10;
   end;
 
   procedure Emit(col, r1, r2: Integer; const f: TFormat);
@@ -83,6 +84,8 @@ begin
   cols := sheet.CustomWidthCols;
   for i := 0 to High(cols) do
     lines := lines + UnicodeString(Format('width %s %d', [ColName(cols[i]), sheet.ColWidth(cols[i])])) + #10;
+  cols := sheet.CustomFormatCols;
+  for i := 0 to High(cols) do EmitCol(cols[i], sheet.ColFormat(cols[i]));
   if sheet.Extent(lastCol, lastRow) then
     for c := 0 to lastCol do
     begin
@@ -181,17 +184,31 @@ begin
       if (parts.Count = 3) and (parts[0] = 'width') and ColFromName(UpperCase(parts[1]), col) and
          TryStrToInt(parts[2], w) then
         sheet.SetColWidth(col, w)
-      else if (parts.Count = 5) and (parts[0] = 'format') then
+      else if (parts.Count = 5) and ((parts[0] = 'format') or (parts[0] = 'colformat')) then
         fmtLines.Add(string(line))
       else if line <> '' then
         Warn('Ignored the line: ' + string(line));
     end;
     body := Copy(text, pos0, MaxInt);
-    ImportCsv(sheet, body, warnings, True);
-    { formats go on after the cells exist }
+    { a column's own format first, so the cells read after it get it as they would when typed }
     for i := 0 to fmtLines.Count - 1 do
     begin
       parts.DelimitedText := fmtLines[i];
+      if (parts[0] = 'colformat') and ColFromName(UpperCase(parts[1]), col) and KindFromName(parts[2], kind) and
+         TryStrToInt(parts[3], dec) then
+      begin
+        f.Kind := kind;
+        f.Decimals := dec;
+        f.Thousands := parts[4] = '1';
+        sheet.SetColFormat(col, f);
+      end;
+    end;
+    ImportCsv(sheet, body, warnings, True);
+    { formats of single cells go on after the cells exist }
+    for i := 0 to fmtLines.Count - 1 do
+    begin
+      parts.DelimitedText := fmtLines[i];
+      if parts[0] = 'colformat' then Continue;
       p := Pos(':', parts[1]);
       if p > 0 then begin a := Copy(parts[1], 1, p - 1); b := Copy(parts[1], p + 1, MaxInt); end
       else begin a := parts[1]; b := parts[1]; end;

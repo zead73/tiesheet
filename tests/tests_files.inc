@@ -216,6 +216,26 @@ begin
     sh.SetEntry(0, 0, 'Note; see below');
     CheckEq(SheetFromText(sh2, SheetToText(sh), warn), '', 'a one-column sheet');
     CheckEq(string(sh2.Display(0, 0)), 'Note; see below', 'is not split');
+    { a column with its own format: typing into it gives the format, and the file says it once }
+    sh.Clear;
+    f.Kind := nfCurrency; f.Decimals := 2; f.Thousands := True;
+    sh.SetColFormat(1, f);
+    sh.SetEntry(0, 0, 'Price');
+    sh.SetEntry(1, 0, 'Amount');
+    sh.SetEntry(1, 1, '1200');
+    sh.SetEntry(1, 2, '=B2*2');
+    sh.SetEntry(1, 3, '5%');
+    sh.SetEntry(1, 4, 'text');
+    CheckEq(string(sh.Display(1, 1)), '$1,200.00', 'a number typed into a currency column');
+    CheckEq(string(sh.Display(1, 2)), '$2,400.00', 'a formula too');
+    CheckEq(string(sh.Display(1, 3)), '5%', 'a percentage keeps what typing gave it');
+    text := SheetToText(sh);
+    CheckEq(string(text), 'tiesheet 1'#10'colformat B currency 2 1'#10'---'#10'Price,Amount'#10',1200'#10',=B2*2'#10',5%'#10',text'#10 + '', 'one colformat line, no per-cell lines');
+    CheckEq(SheetFromText(sh2, text, warn), '', 'read back');
+    CheckEq(string(sh2.Display(1, 1)), '$1,200.00', 'the column format is back');
+    CheckEq(string(sh2.Display(1, 3)), '5%', 'and the percentage');
+    sh2.SetEntry(1, 5, '7');
+    CheckEq(string(sh2.Display(1, 5)), '$7.00', 'and it still applies to what is typed next');
     { not ours, and newer }
     Check(SheetFromText(sh2, 'hello', nil) <> '', 'not a TieSheet file');
     Check(SheetFromText(sh2, 'tiesheet 1'#10'a,b'#10, nil) <> '', 'no --- line');
