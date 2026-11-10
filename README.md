@@ -3,8 +3,12 @@
 A small, keyboard-first spreadsheet in the style of [TiePaper](https://github.com/zead73/tiepaper):
 money, lists and schedules, no charts or pivot tables. For anything complicated, use LibreOffice.
 
-**Status: the calculation engine and the files; no screen yet.** What exists and is tested
-(767 checks, on Linux and under wine for Windows):
+**Status: it runs.** A character-cell screen like TiePaper's, driven from the keyboard (`docs/keys.md`, or F1).
+Entering and editing cells, selecting, copy / cut / paste (with the system clipboard), fill down and right,
+undo, column widths and formats, go to, find, loading and saving. Not built yet: sorting, inserting and
+deleting rows and columns, printing (PDF), the icon and packaging.
+
+The engine under it (767 checks, on Linux and under wine for Windows):
 
 - exact decimal arithmetic (`0.1 + 0.2` is `0.3`, money adds up to the cent), 34 significant digits
 - formulas in the usual syntax, with `$A$1`, ranges, `&`, `%`, error values and about 50 functions:
@@ -25,9 +29,13 @@ money, lists and schedules, no charts or pivot tables. For anything complicated,
 Where the behaviour was in doubt it was checked against LibreOffice Calc (`tests/oracle/run.sh`).
 
 ```
-tests/run-tests.sh        # engine tests
-tests/run-tests.sh win    # the same, cross-compiled and run under wine
+./build.sh                    # build/tiesheet (needs fpc 3.2.2 and SDL2, SDL2_ttf)
+./build-windows.sh            # build/win/tiesheet.exe (then ./fetch-windows-dlls.sh)
+tests/run-tests.sh [win]      # engine tests (the second: under wine)
+tests/run-gui-tests.sh [win]  # the real program, driven by scripted keystrokes, headless
+tiesheet --convert in.csv out.tsh [--values]   # convert without a window
 ```
 
 Source: `src/tsdec.pas` (decimals), `tsvalue.pas`, `tsdate.pas`, `tsformula.pas` (parser and functions),
-`tssheet.pas` (cells, recalculation). MIT licence.
+`tssheet.pas` (cells, recalculation), `tscsv.pas`, `tsfile.pas`, and the screen: `tsapp*.inc`, `tsgfx.pas`, `tssdl.pas`
+(copied from TiePaper). MIT licence; the bundled font, Liberation Mono, keeps its own licence.

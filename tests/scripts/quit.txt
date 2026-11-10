@@ -1,0 +1,14 @@
+size 1100 600
+text kept
+key return
+# quitting with unsaved changes asks; Esc cancels the quit
+key ctrl+shift+x
+key escape
+text more
+key return
+dump build/test-out/quit_a.txt
+# N quits without saving
+key ctrl+shift+x
+text n
+text this must not run
+dump build/test-out/quit_b.txt

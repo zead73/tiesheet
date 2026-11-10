@@ -1,0 +1,44 @@
+size 1100 600
+text a
+key return
+text b
+key return
+text c
+key return
+key return
+text e
+key return
+key ctrl+home
+text 1
+key tab
+text 2
+key tab
+text 3
+key return
+# jump down from A1 along a, b, c to the end of the run, then to e, then (nothing below) stay
+key ctrl+home
+key ctrl+down
+text X
+key return
+key ctrl+up
+key ctrl+down
+key ctrl+down
+text Y
+key return
+# Ctrl+End is the last used cell; Home and End along a row
+key ctrl+end
+text END
+key return
+key home
+text HOME
+key return
+key end
+text LAST
+key return
+# Ctrl+Right along row 1 from A1
+key ctrl+home
+key ctrl+right
+text R
+key return
+dump build/test-out/move.txt
+quit

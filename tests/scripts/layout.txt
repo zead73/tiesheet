@@ -1,0 +1,41 @@
+size 1100 600
+text Amount
+key return
+text 12.5
+key return
+text 1234.5
+key return
+# a column format first: currency with two digits for the whole column
+key ctrl+home
+key ctrl+space
+key f4
+text c
+key return
+# a number typed into the column afterwards gets it
+key escape
+key ctrl+end
+key down
+text 7
+key return
+# a width
+key ctrl+home
+key f3
+key backspace
+text 20
+key return
+# percent with one digit for just two cells of column B
+key right
+text 0.075
+key return
+text 0.5
+key return
+key up
+key up
+key shift+down
+key f4
+text p
+text 1
+key return
+dump build/test-out/layout.txt
+dumpvalues build/test-out/layout_values.txt
+quit

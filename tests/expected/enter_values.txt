@@ -1,0 +1,4 @@
+Item,Price
+Rent,1200
+Food,300.505
+x,1500.505

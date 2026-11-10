@@ -1,0 +1,15 @@
+size 1100 600
+text before help
+key return
+key f1
+key pagedown
+key pagedown
+key end
+key pageup
+key home
+key down
+key up
+key escape
+text after
+dump build/test-out/help.txt
+quit

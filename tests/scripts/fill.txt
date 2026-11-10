@@ -1,0 +1,38 @@
+size 1100 600
+text 1
+key tab
+text =A1+1
+key return
+key left
+text 2
+key tab
+text =A2+1
+key return
+key left
+text 3
+key tab
+text 4
+key return
+# fill right: A1:C1 from A1
+key ctrl+home
+key shift+right
+key shift+right
+key ctrl+r
+dump build/test-out/fill_a.txt
+# one cell selected: fill down copies the cell above (A3 into A4)
+key ctrl+home
+key down
+key down
+key down
+key ctrl+d
+dump build/test-out/fill_b.txt
+# a block: fill down from its first row (B1:B4 from B1)
+key ctrl+home
+key right
+key shift+down
+key shift+down
+key shift+down
+key ctrl+d
+dump build/test-out/fill_c.txt
+dumpvalues build/test-out/fill_values.txt
+quit

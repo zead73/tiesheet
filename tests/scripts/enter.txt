@@ -1,0 +1,51 @@
+size 1100 600
+# typing, finishing with Enter and Tab, cancelling, editing with F2, clearing
+text Item
+key tab
+text Price
+key return
+key left
+text Rent
+key tab
+text 1200
+key return
+key left
+text Food
+key tab
+text 300.50
+key return
+key left
+key tab
+text =SUM(B2:B3)
+key return
+# Escape drops what was typed
+key up
+key up
+text 999
+key escape
+# F2 edits what is there; End, then more text
+key f2
+key end
+text 5
+key return
+# a formula that cannot be read is refused and the text stays
+key right
+text =1+
+key return
+key escape
+# shift+tab moves left after finishing, up/down finish too
+key left
+key left
+text Notes
+key shift+tab
+text x
+key down
+# clearing: put something in A5, then delete it
+key down
+text tmp
+key return
+key up
+key delete
+dump build/test-out/enter.txt
+dumpvalues build/test-out/enter_values.txt
+quit

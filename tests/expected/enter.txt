@@ -1,0 +1,6 @@
+tiesheet 1
+---
+Item,Price
+Rent,1200
+Food,300.505
+x,=SUM(B2:B3)

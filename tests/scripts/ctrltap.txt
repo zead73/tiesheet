@@ -1,0 +1,18 @@
+size 1100 600
+# tap Ctrl, then press the key: the same as holding it
+text a
+key return
+text b
+key return
+ctap
+key z
+dump build/test-out/ctrltap_a.txt
+ctap
+key shift+z
+dump build/test-out/ctrltap_b.txt
+# the letter typed after a tap must not also end up in the cell
+key up
+ctap
+key d
+dump build/test-out/ctrltap_c.txt
+quit

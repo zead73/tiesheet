@@ -1,0 +1,21 @@
+size 1100 600
+text one
+key return
+text two
+key return
+text three
+key return
+key ctrl+z
+key ctrl+z
+dump build/test-out/undo_a.txt
+key ctrl+shift+z
+dump build/test-out/undo_b.txt
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+dump build/test-out/undo_c.txt
+key ctrl+shift+z
+key ctrl+y
+dump build/test-out/undo_d.txt
+quit

@@ -28,6 +28,8 @@ function CsvField(const s: UnicodeString; delim: WideChar): UnicodeString;
   read exactly as they were typed (so 007 is the number 7, as it was when typed). }
 function ImportCsv(sheet: TSheet; const text: UnicodeString; warnings: TStrings; native: Boolean = False): Integer;
 function ExportCsv(sheet: TSheet; valuesOnly: Boolean): UnicodeString;
+{ the result in a cell as plain text: numbers without formats, dates as 2026-11-10 }
+function CellPlainText(sheet: TSheet; col, row: Integer): UnicodeString;
 
 function ReadTextFile(const fn: string; out text: UnicodeString): string;      { '' or the reason }
 { writes to a temporary file, keeps the old file as fn.bak, then puts the new one in place }
@@ -258,7 +260,7 @@ begin
 end;
 
 { the result of a cell as plain text, for a CSV made for sharing }
-function ValueText(sheet: TSheet; col, row: Integer): UnicodeString;
+function CellPlainText(sheet: TSheet; col, row: Integer): UnicodeString;
 var
   v: TValue;
   fmt: TFormat;
@@ -291,7 +293,7 @@ begin
     begin
       if c > 0 then line := line + ',';
       if not sheet.Exists(c, r) then Continue;
-      if valuesOnly then f := ValueText(sheet, c, r) else f := sheet.GetRaw(c, r);
+      if valuesOnly then f := CellPlainText(sheet, c, r) else f := sheet.GetRaw(c, r);
       line := line + CsvField(f, ',');
     end;
     Result := Result + line + #10;

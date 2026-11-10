@@ -1,0 +1,44 @@
+size 1100 600
+text apple
+key return
+text banana
+key return
+text cherry
+key tab
+text Apple pie
+key return
+# Go to C3 and put something there
+key ctrl+g
+text c3
+key return
+text x
+key return
+# find from A1: the first hit is B3 (case does not matter); mark it by putting >> in front
+key ctrl+home
+key ctrl+f
+text apple
+key return
+key f2
+key home
+text >>
+key return
+# the next one wraps round to A1
+key ctrl+h
+key f2
+key home
+text >>
+key return
+# and then B3 again
+key ctrl+h
+key f2
+key home
+text >>
+key return
+# nothing found: the cursor stays where it is
+key ctrl+f
+text zzz
+key return
+text !
+key return
+dump build/test-out/find.txt
+quit

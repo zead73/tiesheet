@@ -1,46 +1,57 @@
-# TieSheet keys (draft)
+# TieSheet keys
 
-TiePaper's keys are used wherever they mean something in a sheet, so the hands already know them.
-**Control commands:** hold Ctrl and press the key, *or* tap and release Ctrl and then press the key (the
-status line shows `CTRL`). Capital letters mean Ctrl+Shift.
+TiePaper's keys are used wherever they mean something in a sheet. **Control commands:** hold Ctrl and
+press the key, *or* tap and release Ctrl and then press the key (the status line shows `CTRL`). Capital
+letters mean Ctrl+Shift. Press **F1** in the program for this list.
 
-## Same as TiePaper
+## Moving and selecting
 
 | Keys | Action |
 |------|--------|
-| F1 | Help |
-| Ctrl+S / Ctrl+L | Save / load a file (`.tsh` or `.csv`) |
-| Ctrl+Shift+X | Quit |
-| Ctrl+Z / Ctrl+Shift+Z | Undo / redo |
-| Alt+C, Alt+X, Alt+V | Copy / cut / paste with the system clipboard |
-| Ctrl+Insert, Shift+Delete, Shift+Insert | The same three, the other way |
-| Shift+arrows | Select cells; Alt+A selects everything; Esc clears the selection |
-| Ctrl+Home / Ctrl+End | Top left / last used cell |
+| arrows | Move one cell |
+| Ctrl+arrows | Jump to the edge of a block of cells |
+| Home / End | First column / last used column |
+| Ctrl+Home / Ctrl+End | Top left / the last used cell |
+| PgUp / PgDn | A screen up / down |
+| Ctrl+G | Go to a cell, e.g. `B12` |
 | Ctrl+F / Ctrl+H | Find / hunt for the next one |
-| Ctrl+E | Erase the selected cells (Delete does too) |
-| Ctrl++ / Ctrl+- | Insert / delete a row (Ctrl+Shift+ the same keys: a column) |
-| Tab | Next cell to the right |
-| Home / End, PgUp / PgDn | Start / end of the row, a screen up / down |
+| Shift+arrows | Select cells |
+| Ctrl+Space | Select the column |
+| Alt+A | Select everything |
+| Esc | Clear the selection |
+| mouse | click, drag, double-click to edit, wheel scrolls, Ctrl+wheel zooms |
 
-## Spreadsheet only
+## Entering
 
 | Keys | Action |
 |------|--------|
-| arrows | Move; Ctrl+arrows jump to the edge of the data |
-| type | Start entering into the cell (replaces what is there) |
-| Enter / Tab / Shift+Tab / Shift+Enter | Finish the entry and move down / right / left / up |
+| type | Replace what is in the cell |
+| F2 | Edit what is in the cell |
+| Enter / Tab | Finish and move down / right (with Shift: up / left); outside an entry they just move |
+| Up / Down | Finish and move |
 | Esc | Cancel the entry |
-| Ctrl+D / Ctrl+R | Fill down / right from the first row / column of the selection |
-| Ctrl+G | Go to a cell (e.g. `B12`) |
+| Delete, Ctrl+E | Clear the selected cells |
+
+## Copying, filling, undo
+
+| Keys | Action |
+|------|--------|
+| Alt+C, Alt+X, Alt+V | Copy / cut / paste with the system clipboard (formulas copied inside TieSheet keep working, their references move) |
+| Ctrl+Insert, Shift+Delete, Shift+Insert | The same three |
+| Ctrl+D / Ctrl+R | Fill down / right from the first row / column of the selection (one cell: from the cell above / left) |
+| Ctrl+Z / Ctrl+Shift+Z | Undo / redo |
+
+## Layout, files
+
+| Keys | Action |
+|------|--------|
 | F3 | Column width |
-| F4 | Format the selection: general, number, currency, percent, date |
-| F5 | Sort the selection by a column |
+| F4 | Format the selection: general, number, currency, percent, date (after Ctrl+Space, the whole column, also for numbers typed later) |
+| Ctrl+L | Load a file (`.tsh` or `.csv`) |
+| Ctrl+S / Ctrl+Shift+S | Save / save under another name |
+| Ctrl+Shift+X | Quit |
+| F1 | Help |
 
-## Decisions waiting for you (TiePaper's meaning is the default)
+## Kept as in TiePaper (not built yet in the sheet)
 
-| Keys | TiePaper | The usual spreadsheet habit |
-|------|----------|-----------------------------|
-| Ctrl+V | preview | paste |
-| Ctrl+O | output (PDF, text, printer) | open a file (Ctrl+L opens in both) |
-| F2 | screen options | edit the cell |
-| Enter on a cell | (new paragraph) | edit the cell (F2) or move down |
+Ctrl+V (print preview) and Ctrl+O (output: PDF, text) keep TiePaper's meaning; F9 is the screen options.

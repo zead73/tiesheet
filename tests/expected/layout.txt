@@ -1,0 +1,10 @@
+tiesheet 1
+width A 20
+colformat A currency 2 1
+format A2:A3 currency 2 1
+format B1:B2 percent 1 0
+---
+Amount,0.075
+12.5,0.5
+1234.5,
+7,

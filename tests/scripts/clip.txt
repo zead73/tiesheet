@@ -1,0 +1,73 @@
+size 1100 600
+today 46336
+# A1:A3 = 10, =A1*2, 5%
+text 10
+key return
+text =A1*2
+key return
+text 5%
+key return
+# copy them and paste into C1: the formula must read =C1*2
+key ctrl+home
+key shift+down
+key shift+down
+key alt+c
+key ctrl+home
+key right
+key right
+key alt+v
+dump build/test-out/clip_a.txt
+# cut C1:C3, paste at E5
+key ctrl+home
+key right
+key right
+key shift+down
+key shift+down
+key shift+delete
+key ctrl+home
+key right
+key right
+key right
+key right
+key down
+key down
+key down
+key down
+key shift+insert
+dump build/test-out/clip_b.txt
+# one copied formula cell fills a whole selection, each copy with its own references
+key ctrl+home
+key down
+key alt+c
+key ctrl+home
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key shift+down
+key shift+down
+key alt+v
+dump build/test-out/clip_c.txt
+# text from elsewhere is typed in cell by cell
+key ctrl+end
+key down
+key home
+clipboard q\t=1+1\t$3.50\nr\t\t2026-11-10
+key alt+v
+dump build/test-out/clip_d.txt
+dumpvalues build/test-out/clip_d_values.txt
+# Ctrl+Insert copies, Shift+Insert pastes
+key ctrl+home
+key ctrl+insert
+key down
+key down
+key down
+key down
+key down
+key shift+insert
+dump build/test-out/clip_e.txt
+quit
