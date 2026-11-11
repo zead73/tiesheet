@@ -54,12 +54,14 @@ type
 
   { rewrites one reference; returns False when it no longer exists (it becomes #REF!) }
   TRefMap = function(var col, row: Integer; absCol, absRow: Boolean): Boolean of object;
+  { the same for a block A1:B2 as a whole, for changes that can shrink or stretch it }
+  TRangeMap = function(var c1, r1, c2, r2: Integer): Boolean of object;
 
 function ParseFormula(const text: UnicodeString; out root: TNode; out err: string): Boolean;
 function EvalFormula(root: TNode; ctx: TEvalCtx): TValue;
 procedure CollectRanges(n: TNode; var list: TRangeArray);
 
-function RewriteRefs(const f: UnicodeString; map: TRefMap; out res: UnicodeString): Boolean;
+function RewriteRefs(const f: UnicodeString; map: TRefMap; out res: UnicodeString; rmap: TRangeMap = nil): Boolean;
 function ShiftFormula(const f: UnicodeString; dCol, dRow: Integer; out res: UnicodeString): Boolean;
 
 function ColName(col: Integer): string;
@@ -1584,7 +1586,7 @@ end;
 
 { ---- rewriting references ---- }
 
-function RewriteRefs(const f: UnicodeString; map: TRefMap; out res: UnicodeString): Boolean;
+function RewriteRefs(const f: UnicodeString; map: TRefMap; out res: UnicodeString; rmap: TRangeMap): Boolean;
 var
   toks: TTokens;
   err: string;
@@ -1611,7 +1613,14 @@ begin
       begin
         t2 := toks[i + 2];
         c2 := t2.Col; r2 := t2.Row;
-        ok2 := map(c2, r2, t2.AbsCol, t2.AbsRow);
+        if Assigned(rmap) then
+        begin
+          c1 := t.Col; r1 := t.Row;
+          ok1 := rmap(c1, r1, c2, r2);
+          ok2 := ok1;
+        end
+        else
+          ok2 := map(c2, r2, t2.AbsCol, t2.AbsRow);
         if ok1 and ok2 then
           res := res + RefText(c1, r1, t.AbsCol, t.AbsRow) + ':' + RefText(c2, r2, t2.AbsCol, t2.AbsRow)
         else

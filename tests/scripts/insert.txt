@@ -1,0 +1,40 @@
+size 1100 600
+# A1 = 1, A2 = A1+1, A3 = SUM(A1:A2)
+text 1
+key return
+text =A1+1
+key return
+text =SUM(A1:A2)
+key return
+# insert a row above A2 (Ctrl++): the sum's range stretches
+key ctrl+home
+key down
+key ctrl+shift+=
+dump build/test-out/insert_a.txt
+# undo takes it back
+key ctrl+z
+dump build/test-out/insert_b.txt
+# select two rows, A2:A3, and insert two
+key shift+down
+key ctrl+shift+=
+dump build/test-out/insert_c.txt
+# delete the first row: what pointed at it shows #REF!
+key ctrl+home
+key ctrl+-
+dump build/test-out/insert_d.txt
+dumpvalues build/test-out/insert_d_values.txt
+# columns: B4 = 5, then insert a column in front of B (Ctrl+Space selects the column)
+key ctrl+end
+key right
+text 5
+key return
+key ctrl+home
+key right
+key ctrl+space
+key ctrl+shift+=
+dump build/test-out/insert_e.txt
+# and delete that empty column again
+key ctrl+space
+key ctrl+-
+dump build/test-out/insert_f.txt
+quit

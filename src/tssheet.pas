@@ -60,6 +60,7 @@ type
     function Find(col, row: Integer): TCell;
     procedure Evaluate(root: TCell);
     function DepCells(c: TCell): Classes.TList;
+    procedure Restructure(isRow, remove: Boolean; at, count: Integer);
   public
     constructor Create;
     destructor Destroy; override;
@@ -92,6 +93,15 @@ type
     function CustomFormatCols: TIntArray;
     { the format a cell has just from what was typed in it (and its column) }
     function ExpectedFormat(col, row: Integer): TFormat;
+    { rows and columns: the cells below / to the right move, and every formula follows what it refers to;
+      what refers to a deleted row or column becomes #REF! }
+    procedure InsertRows(at, count: Integer);
+    procedure DeleteRows(at, count: Integer);
+    procedure InsertCols(at, count: Integer);
+    procedure DeleteCols(at, count: Integer);
+    { sorts the rows r1..r2 of the columns c1..c2 by the cells of keyCol; empty cells go last.
+      Formulas move with their row, relative references following. '' or why not }
+    function SortRows(c1, r1, c2, r2, keyCol: Integer; ascending: Boolean): string;
     { copies a cell, shifting the relative references of a formula; '' or the reason }
     function CopyCell(sc, sr, dc, dr: Integer): string;
 
@@ -802,6 +812,287 @@ begin
     Result := ent.Fmt;
     if (Result.Kind = nfGeneral) and (ent.Kind = ckNumber) then Result := ColFormat(col);
   end;
+end;
+
+{ ---- inserting and deleting rows and columns ---- }
+
+type
+  TStructMapper = class
+    IsRow, Remove: Boolean;
+    At, Count: Integer;
+    function MapOne(v: Integer; out nv: Integer): Boolean;
+    function MapAxis(var a, b: Integer): Boolean;
+    function Map(var col, row: Integer; absCol, absRow: Boolean): Boolean;
+    function MapRange(var c1, r1, c2, r2: Integer): Boolean;
+  end;
+
+function TStructMapper.MapOne(v: Integer; out nv: Integer): Boolean;
+begin
+  nv := v;
+  if Remove then
+  begin
+    if (v >= At) and (v <= At + Count - 1) then Exit(False);
+    if v > At + Count - 1 then nv := v - Count;
+    Result := True;
+  end
+  else
+  begin
+    if v >= At then nv := v + Count;
+    if IsRow then Result := nv <= MAX_ROW else Result := nv <= MAX_COL;
+  end;
+end;
+
+{ one side of a block, which may be written the wrong way round }
+function TStructMapper.MapAxis(var a, b: Integer): Boolean;
+var
+  lo, hi, nlo, nhi: Integer;
+  swapped: Boolean;
+begin
+  swapped := a > b;
+  if swapped then begin lo := b; hi := a; end else begin lo := a; hi := b; end;
+  if Remove then
+  begin
+    if hi < At then begin nlo := lo; nhi := hi; end
+    else if lo > At + Count - 1 then begin nlo := lo - Count; nhi := hi - Count; end
+    else
+    begin
+      { it overlaps what is deleted: what is left of it closes up }
+      if lo < At then nlo := lo else nlo := At;
+      if hi > At + Count - 1 then nhi := hi - Count else nhi := At - 1;
+      if nhi < nlo then Exit(False);
+    end;
+  end
+  else
+  begin
+    if not MapOne(lo, nlo) then Exit(False);
+    if not MapOne(hi, nhi) then Exit(False);
+  end;
+  if swapped then begin a := nhi; b := nlo; end else begin a := nlo; b := nhi; end;
+  Result := True;
+end;
+
+function TStructMapper.Map(var col, row: Integer; absCol, absRow: Boolean): Boolean;
+begin
+  if IsRow then Result := MapOne(row, row) else Result := MapOne(col, col);
+end;
+
+function TStructMapper.MapRange(var c1, r1, c2, r2: Integer): Boolean;
+begin
+  if IsRow then Result := MapAxis(r1, r2) else Result := MapAxis(c1, c2);
+end;
+
+procedure TSheet.Restructure(isRow, remove: Boolean; at, count: Integer);
+var
+  all: array of TCell;
+  n, i, pos, np, k, nk: Integer;
+  c: TCell;
+  mapper: TStructMapper;
+  res: UnicodeString;
+  node: TNode;
+  err: string;
+  keys, widths: TIntArray;
+  fmts: array of TFormat;
+begin
+  if count < 1 then Exit;
+  mapper := TStructMapper.Create;
+  try
+    mapper.IsRow := isRow;
+    mapper.Remove := remove;
+    mapper.At := at;
+    mapper.Count := count;
+    n := 0;
+    SetLength(all, FCells.Count);
+    for c in FCells.Values do
+    begin
+      all[n] := c;
+      Inc(n);
+    end;
+    FCells.Clear;
+    for i := 0 to n - 1 do
+    begin
+      c := all[i];
+      if isRow then pos := c.Row else pos := c.Col;
+      if not mapper.MapOne(pos, np) then
+      begin
+        c.Free;
+        Continue;
+      end;
+      if isRow then c.Row := np else c.Col := np;
+      if c.Kind = ckFormula then
+        if RewriteRefs(c.Raw, @mapper.Map, res, @mapper.MapRange) then
+        begin
+          node := nil;
+          if ParseFormula(res, node, err) then
+          begin
+            c.Node.Free;
+            c.Node := node;
+            c.Raw := res;
+            c.Deps := nil;
+            CollectRanges(node, c.Deps);
+          end;
+        end;
+      FCells.Add(Key(c.Col, c.Row), c);
+    end;
+    if not isRow then
+    begin
+      { column widths and formats move with their columns: take them all out first, then put them back }
+      keys := CustomWidthCols;
+      SetLength(widths, Length(keys));
+      for k := 0 to High(keys) do widths[k] := ColWidth(keys[k]);
+      FWidths.Clear;
+      for k := 0 to High(keys) do
+        if mapper.MapOne(keys[k], nk) then FWidths.AddOrSetValue(nk, widths[k]);
+      keys := CustomFormatCols;
+      SetLength(fmts, Length(keys));
+      for k := 0 to High(keys) do fmts[k] := ColFormat(keys[k]);
+      FColFmts.Clear;
+      for k := 0 to High(keys) do
+        if mapper.MapOne(keys[k], nk) then FColFmts.AddOrSetValue(nk, fmts[k]);
+    end;
+  finally
+    mapper.Free;
+  end;
+  FDirty := True;
+end;
+
+procedure TSheet.InsertRows(at, count: Integer);
+begin
+  Restructure(True, False, at, count);
+end;
+
+procedure TSheet.DeleteRows(at, count: Integer);
+begin
+  Restructure(True, True, at, count);
+end;
+
+procedure TSheet.InsertCols(at, count: Integer);
+begin
+  Restructure(False, False, at, count);
+end;
+
+procedure TSheet.DeleteCols(at, count: Integer);
+begin
+  Restructure(False, True, at, count);
+end;
+
+{ ---- sorting ---- }
+
+function SortRank(const v: TValue): Integer;
+begin
+  case v.Kind of
+    vkNum: Result := 0;
+    vkText: Result := 1;
+    vkBool: Result := 2;
+    vkErr: Result := 3;
+  else
+    Result := 4;
+  end;
+end;
+
+{ empty cells are not compared here: they always go last }
+function SortCompare(const a, b: TValue): Integer;
+var
+  ra, rb: Integer;
+  x, y: UnicodeString;
+begin
+  ra := SortRank(a);
+  rb := SortRank(b);
+  if ra <> rb then
+  begin
+    if ra < rb then Exit(-1) else Exit(1);
+  end;
+  case ra of
+    0: Result := DecCmpSpread(a.Num, b.Num);
+    1:
+      begin
+        x := UnicodeLowerCase(a.Text);
+        y := UnicodeLowerCase(b.Text);
+        if x < y then Result := -1 else if x > y then Result := 1 else Result := 0;
+      end;
+    2: Result := Ord(a.Bool) - Ord(b.Bool);
+    3: Result := Ord(a.Err) - Ord(b.Err);
+  else
+    Result := 0;
+  end;
+end;
+
+function TSheet.SortRows(c1, r1, c2, r2, keyCol: Integer; ascending: Boolean): string;
+type
+  TSnap = record
+    Has: Boolean;
+    Raw: UnicodeString;
+    Fmt: TFormat;
+  end;
+var
+  n, i, j, c, t, src, width, cmp, tmp: Integer;
+  keys: array of TValue;
+  order: array of Integer;
+  snap: array of TSnap;
+  raw, shifted: UnicodeString;
+  err: string;
+
+  function Less(x, y: Integer): Boolean;       { does row x come before row y }
+  begin
+    if keys[x].Kind = vkEmpty then Exit(False);
+    if keys[y].Kind = vkEmpty then Exit(True);
+    cmp := SortCompare(keys[x], keys[y]);
+    if ascending then Result := cmp < 0 else Result := cmp > 0;
+  end;
+
+begin
+  Result := '';
+  if (r2 <= r1) or (c2 < c1) then Exit;
+  if (keyCol < c1) or (keyCol > c2) then Exit('The sort column is not inside the selection');
+  n := r2 - r1 + 1;
+  width := c2 - c1 + 1;
+  SetLength(keys, n);
+  SetLength(order, n);
+  for i := 0 to n - 1 do
+  begin
+    keys[i] := Value(keyCol, r1 + i);
+    order[i] := i;
+  end;
+  { insertion sort: stable, and the sheets are small }
+  for i := 1 to n - 1 do
+  begin
+    tmp := order[i];
+    j := i - 1;
+    while (j >= 0) and Less(tmp, order[j]) do
+    begin
+      order[j + 1] := order[j];
+      Dec(j);
+    end;
+    order[j + 1] := tmp;
+  end;
+  SetLength(snap, n * width);
+  for i := 0 to n - 1 do
+    for c := 0 to width - 1 do
+    begin
+      snap[i * width + c].Has := Exists(c1 + c, r1 + i);
+      if snap[i * width + c].Has then
+      begin
+        snap[i * width + c].Raw := GetRaw(c1 + c, r1 + i);
+        snap[i * width + c].Fmt := GetFormat(c1 + c, r1 + i);
+      end;
+    end;
+  for t := 0 to n - 1 do
+  begin
+    src := order[t];
+    for c := 0 to width - 1 do
+    begin
+      if not snap[src * width + c].Has then
+      begin
+        ClearCell(c1 + c, r1 + t);
+        Continue;
+      end;
+      raw := snap[src * width + c].Raw;
+      if (Length(raw) > 1) and (raw[1] = '=') then
+        if ShiftFormula(raw, 0, t - src, shifted) then raw := shifted;
+      err := SetEntry(c1 + c, r1 + t, raw);
+      if err = '' then SetFormat(c1 + c, r1 + t, snap[src * width + c].Fmt) else Result := err;
+    end;
+  end;
+  FDirty := True;
 end;
 
 end.

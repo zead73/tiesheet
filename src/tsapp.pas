@@ -167,6 +167,10 @@ type
     procedure DoFormat;
     procedure DoGoto;
     procedure DoFind(askFirst: Boolean);
+    procedure DoInsert;
+    procedure DoDelete;
+    procedure DoSort;
+    function CurrentRegion(out c1, r1, c2, r2: Integer): Boolean;
   end;
 
 implementation

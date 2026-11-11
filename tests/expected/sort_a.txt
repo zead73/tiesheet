@@ -1,0 +1,7 @@
+tiesheet 1
+---
+Name,Amount,
+Apple,10,
+banana,7,
+cherry,2,=B4*2
+pear,3,

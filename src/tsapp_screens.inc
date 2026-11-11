@@ -146,6 +146,8 @@ begin
   t.Add('');
   t.Add('#Layout');
   t.Add('F3|Column width');
+  t.Add('Ctrl++ / Ctrl+-|Insert / delete the selected rows (after Ctrl+Space: the selected columns); formulas follow, and what pointed at a deleted row shows #REF!');
+  t.Add('F5|Sort a block of rows by one column: you are asked which column, which way, and whether the first row is a heading.  One cell selected: the block around it');
   t.Add('F4|Format the selected cells: general, number, currency, percent, date.  With Ctrl+Space first, the whole column gets the format, also for numbers typed later');
   t.Add('');
   t.Add('#Files');
@@ -175,7 +177,7 @@ begin
   t.Add('Numbers are exact: 0.1 + 0.2 is 0.3, and money adds up to the cent.');
   t.Add('');
   t.Add('#Not built yet');
-  t.Add('Sorting, inserting and deleting rows and columns, the print preview (Ctrl+V) and output (Ctrl+O).');
+  t.Add('The print preview (Ctrl+V) and output (Ctrl+O).');
 end;
 
 procedure TApp.DoHelp;
@@ -324,3 +326,135 @@ begin
   end;
   SetMsg('Not found');
 end;
+
+{ ---- inserting, deleting, sorting ---- }
+
+procedure TApp.DoInsert;
+var
+  c1, r1, c2, r2, n: Integer;
+  before: UnicodeString;
+begin
+  SelRect(c1, r1, c2, r2);
+  before := Snapshot;
+  if SelCols and SelActive then
+  begin
+    n := c2 - c1 + 1;
+    Sheet.InsertCols(c1, n);
+    SetMsg(UnicodeString(Format('Inserted %d column(s)', [n])));
+  end
+  else
+  begin
+    n := r2 - r1 + 1;
+    Sheet.InsertRows(r1, n);
+    SetMsg(UnicodeString(Format('Inserted %d row(s)', [n])));
+  end;
+  SelActive := False;
+  SelCols := False;
+  CurC := c1;
+  CurR := r1;
+  if SelCols then CurR := 0;
+  Changed(before);
+end;
+
+procedure TApp.DoDelete;
+var
+  c1, r1, c2, r2, n: Integer;
+  before: UnicodeString;
+  wasCols: Boolean;
+begin
+  SelRect(c1, r1, c2, r2);
+  wasCols := SelCols and SelActive;
+  before := Snapshot;
+  if wasCols then
+  begin
+    n := c2 - c1 + 1;
+    Sheet.DeleteCols(c1, n);
+    SetMsg(UnicodeString(Format('Deleted %d column(s)', [n])));
+  end
+  else
+  begin
+    n := r2 - r1 + 1;
+    Sheet.DeleteRows(r1, n);
+    SetMsg(UnicodeString(Format('Deleted %d row(s)', [n])));
+  end;
+  SelActive := False;
+  SelCols := False;
+  CurC := c1;
+  CurR := r1;
+  Changed(before);
+end;
+
+{ the block of cells around the cursor, as far as filled cells touch each other }
+function TApp.CurrentRegion(out c1, r1, c2, r2: Integer): Boolean;
+var
+  grew: Boolean;
+  lc, lr, k: Integer;
+
+  function AnyIn(ca, ra, cb, rb: Integer): Boolean;
+  var
+    c, r: Integer;
+  begin
+    Result := False;
+    if ca < 0 then ca := 0;
+    if ra < 0 then ra := 0;
+    if cb > lc then cb := lc;
+    if rb > lr then rb := lr;
+    for r := ra to rb do
+      for c := ca to cb do
+        if Sheet.Exists(c, r) then Exit(True);
+  end;
+
+begin
+  c1 := CurC; c2 := CurC; r1 := CurR; r2 := CurR;
+  Result := LastUsed(lc, lr);
+  if not Result then Exit;
+  repeat
+    grew := False;
+    if (r1 > 0) and AnyIn(c1 - 1, r1 - 1, c2 + 1, r1 - 1) then begin Dec(r1); grew := True; end;
+    if (r2 < lr) and AnyIn(c1 - 1, r2 + 1, c2 + 1, r2 + 1) then begin Inc(r2); grew := True; end;
+    if (c1 > 0) and AnyIn(c1 - 1, r1 - 1, c1 - 1, r2 + 1) then begin Dec(c1); grew := True; end;
+    if (c2 < lc) and AnyIn(c2 + 1, r1 - 1, c2 + 1, r2 + 1) then begin Inc(c2); grew := True; end;
+  until not grew;
+  k := 0;
+  Result := (r2 > r1) and (c2 >= c1) and (k = 0);
+end;
+
+procedure TApp.DoSort;
+var
+  c1, r1, c2, r2, key, k, h: Integer;
+  v: UnicodeString;
+  before: UnicodeString;
+  err: string;
+  dummy: Integer;
+begin
+  if SelActive and ((CurC <> AnchorC) or (CurR <> AnchorR) or SelCols) then SelRect(c1, r1, c2, r2)
+  else if not CurrentRegion(c1, r1, c2, r2) then
+  begin
+    SetMsg('Nothing to sort: put the cursor in a list, or select the rows');
+    Exit;
+  end;
+  dummy := 0;
+  if r2 <= r1 then begin SetMsg('Nothing to sort: one row only'); Exit; end;
+  key := CurC;
+  if key < c1 then key := c1;
+  if key > c2 then key := c2;
+  v := UnicodeString(ColName(key));
+  if not Prompt(UnicodeString(Format('Sort rows %d-%d by column:', [r1 + 1, r2 + 1])), v) then Exit;
+  if not ParseCellName(UnicodeString(UpperCase(Trim(string(v))) + '1'), key, dummy) or (key < c1) or (key > c2) then
+  begin
+    SetMsg(UnicodeString(Format('Choose a column from %s to %s', [ColName(c1), ColName(c2)])), True);
+    Exit;
+  end;
+  k := AskChoice('Order:  (A)scending  (D)escending', 'AD');
+  if k < 0 then Exit;
+  h := AskChoice('Is the first row a heading?  (Y)es  (N)o', 'YN');
+  if h < 0 then Exit;
+  if h = 0 then Inc(r1);
+  if r2 <= r1 then begin SetMsg('Nothing to sort below the heading'); Exit; end;
+  before := Snapshot;
+  err := Sheet.SortRows(c1, r1, c2, r2, key, k = 0);
+  Changed(before);
+  if err <> '' then SetMsg(UnicodeString(err), True)
+  else SetMsg(UnicodeString(Format('Sorted %d rows by column %s', [r2 - r1 + 1, ColName(key)])));
+end;
+

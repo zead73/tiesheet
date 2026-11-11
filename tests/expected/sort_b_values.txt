@@ -1,0 +1,5 @@
+Name,Amount,
+Apple,10,
+banana,7,
+pear,3,
+cherry,2,4

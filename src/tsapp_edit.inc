@@ -531,7 +531,7 @@ begin
     SDLK_F2: begin BeginEdit(False, ''); Exit; end;
     SDLK_F3: begin DoWidth; Exit; end;
     SDLK_F4: begin DoFormat; Exit; end;
-    SDLK_F5: begin SetMsg('Sorting is not built yet'); Exit; end;
+    SDLK_F5: begin DoSort; Exit; end;
     SDLK_F9: begin SetMsg('Screen options are not built yet'); Exit; end;
   end;
   if ev.Alt then
@@ -559,9 +559,9 @@ begin
         end;
       SDLK_INSERT: begin ClipCopy(False); Exit; end;
       SDLK_SPACE: begin SelectColumn; Exit; end;
-      SDLK_KP_PLUS: begin SetMsg('Inserting rows and columns is not built yet'); Exit; end;
-      SDLK_KP_MINUS: begin SetMsg('Deleting rows and columns is not built yet'); Exit; end;
-      Ord('='), Ord('-'): begin SetMsg('Inserting and deleting rows and columns is not built yet'); Exit; end;
+      SDLK_KP_PLUS: begin DoInsert; Exit; end;
+      SDLK_KP_MINUS, Ord('-'): begin DoDelete; Exit; end;
+      Ord('='): begin if ev.Shift then DoInsert; Exit; end;
     end;
     case ch of
       's': DoSave(ev.Shift);

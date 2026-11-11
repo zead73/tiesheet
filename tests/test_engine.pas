@@ -167,6 +167,7 @@ end;
 
 {$I tests_sheet.inc}
 {$I tests_files.inc}
+{$I tests_structure.inc}
 
 begin
   {$IFDEF WINDOWS}
@@ -188,6 +189,8 @@ begin
   TestCsvSheet;
   TestNativeFile;
   TestFiles;
+  TestInsertDelete;
+  TestSort;
   WriteLn(Passes, ' passed, ', Fails, ' failed');
   if Fails > 0 then Halt(1);
 end.

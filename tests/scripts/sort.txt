@@ -1,0 +1,50 @@
+size 1100 600
+text Name
+key tab
+text Amount
+key return
+key left
+text pear
+key tab
+text 3
+key return
+key left
+text Apple
+key tab
+text 10
+key return
+key left
+text cherry
+key tab
+text 2
+key tab
+text =B4*2
+key return
+key left
+key left
+text banana
+key tab
+text 7
+key return
+# the cursor is in the list: the block around it is sorted, by column A, ascending, first row a heading
+key ctrl+home
+key down
+key f5
+key return
+text a
+text y
+dump build/test-out/sort_a.txt
+# by the amount, descending
+key f5
+text b
+key return
+text d
+text y
+dump build/test-out/sort_b.txt
+dumpvalues build/test-out/sort_b_values.txt
+# a column that is not in the block is refused
+key f5
+text z
+key return
+dump build/test-out/sort_c.txt
+quit
