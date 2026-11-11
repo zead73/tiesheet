@@ -7,5 +7,5 @@ Exec=tiesheet %f
 Icon=tiesheet
 Terminal=false
 Categories=Office;Spreadsheet;
-Keywords=spreadsheet;csv;budget;
+Keywords=csv;budget;schedule;list;
 StartupWMClass=tiesheet
