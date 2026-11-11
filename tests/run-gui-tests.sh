@@ -10,7 +10,10 @@ export HOME="$PWD/build/home" XDG_CONFIG_HOME="$PWD/build/home/.config" SDL_VIDE
 RUN="./build/tiesheet"
 if [ "$1" = win ]; then
   RUN="wine build/win/tiesheet.exe"
-  export WINEPREFIX="$PWD/build/wine-prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" SDL_RENDER_DRIVER=software
+  # winemenubuilder is switched off, and the data folder kept out of the real one: wine otherwise adds
+  # menu entries and icons to the user's desktop
+  export WINEPREFIX="$PWD/build/wine-prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d" SDL_RENDER_DRIVER=software
+  export XDG_DATA_HOME="$PWD/build/home/.local/share"
   unset WAYLAND_DISPLAY
 fi
 fail=0

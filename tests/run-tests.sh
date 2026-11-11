@@ -10,5 +10,5 @@ if [ "$1" = "win" ]; then
   mkdir -p build/units-win
   fpc -Twin64 -Px86_64 -Mobjfpc -Sh -O1 -FUbuild/units-win -Fusrc -FEbuild/test -obuild/test/test_engine.exe tests/test_engine.pas >build/test/compile-win.log 2>&1 \
     || { cat build/test/compile-win.log; exit 1; }
-  WINEDEBUG=-all wine build/test/test_engine.exe
+  WINEDEBUG=-all WINEDLLOVERRIDES="winemenubuilder.exe=d" XDG_DATA_HOME="$PWD/build/home/.local/share" wine build/test/test_engine.exe
 fi
