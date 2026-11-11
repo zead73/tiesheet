@@ -49,8 +49,8 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | F5 | Sort a block of rows by one column (asks which column, which way, and whether the first row is a heading); with one cell selected, the block around it |
 | F3 | Column width |
 | F4 | Format the selection: general, number, currency, percent, date (after Ctrl+Space, the whole column, also for numbers typed later) |
-| Ctrl+L | Load a file (`.tsh` or `.csv`) |
-| Ctrl+S / Ctrl+Shift+S | Save / save under another name |
+| Ctrl+L | Open a file (`.tsh` or `.csv`) with the picker |
+| Ctrl+S / Ctrl+Shift+S | Save / save under another name (the picker again; a name that exists asks before it is replaced) |
 | Ctrl+Shift+X | Quit |
 | F1 | Help |
 
@@ -62,3 +62,22 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | Ctrl+O | Output: a PDF or a text file |
 
 F9 (screen options) is kept as in TiePaper's F2 but is not built yet.
+
+## The file picker
+
+One pane, in the style of tiepick. Typing goes to the edit line at the bottom.
+
+| Keys | Action |
+|------|--------|
+| Up / Down / PgUp / PgDn | Move the highlight |
+| Home or Left / End | First / last entry (when the edit line is empty) |
+| Enter | Open the highlighted folder or file; with text typed: open that path, or the entry it starts, or (saving) accept the name |
+| Backspace | Parent folder (when the edit line is empty) |
+| Tab | Next file filter (sheets, TieSheet, CSV, all files) |
+| F2 | Places: home, the top, mounted drives, GTK bookmarks (drives on Windows) |
+| F7 | Make a folder |
+| F10 | Accept (Open, or Save in the folder shown with the name typed) |
+| Ctrl+H | Show / hide hidden files |
+| Esc | Clear the edit line, then cancel |
+
+When saving, moving the highlight onto a folder and pressing Enter opens it and keeps the name you typed.

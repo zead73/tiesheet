@@ -140,23 +140,28 @@ end;
 
 procedure TApp.DoOutput;
 var
-  k: Integer;
-  v: UnicodeString;
-  fn, err, base: string;
+  k, fi: Integer;
+  fn, err, base, startDir: string;
 begin
   if not BuildJob then Exit;
   k := AskChoice('Output:  (P)DF  (T)ext file', 'PT');
   if k < 0 then Exit;
-  if FileName <> '' then base := ChangeFileExt(FileName, '') else base := Cfg.LastDir + 'sheet';
-  if k = 0 then v := UTF8Decode(base + '.pdf') else v := UTF8Decode(base + '.txt');
-  if not Prompt('Write to:', v, True) then Exit;
-  v := UnicodeString(Trim(string(v)));
-  if v = '' then Exit;
-  fn := ExpandHome(UTF8Encode(v));
-  if ExtractFileExt(fn) = '' then
+  if FileName <> '' then base := ChangeFileExt(ExtractFileName(FileName), '') else base := 'sheet';
+  startDir := Cfg.LastDir;
+  if (startDir = '') and (FileName <> '') then startDir := ExtractFilePath(FileName);
+  if k = 0 then
   begin
-    if k = 0 then fn := fn + '.pdf' else fn := fn + '.txt';
+    fi := 0;
+    if not PickFile(pmSave, 'Write the PDF', startDir, base + '.pdf', ['PDF files (*.pdf)|*.pdf', 'All files|*'], fi, fn) then Exit;
+    if ExtractFileExt(fn) = '' then fn := fn + '.pdf';
+  end
+  else
+  begin
+    fi := 0;
+    if not PickFile(pmSave, 'Write the text file', startDir, base + '.txt', ['Text files (*.txt)|*.txt', 'All files|*'], fi, fn) then Exit;
+    if ExtractFileExt(fn) = '' then fn := fn + '.txt';
   end;
+  if not OverwriteOk(Self, fn, '') then Exit;
   if k = 0 then err := WritePdfFile(PrintJob, fn) else err := WriteTextFile(fn, JobToText(PrintJob));
   if err <> '' then SetMsg(UnicodeString(err), True)
   else SetMsg(UnicodeString(Format('Wrote %s (%d page(s), %s)', [ExtractFileName(fn), Length(PrintJob.Pages),

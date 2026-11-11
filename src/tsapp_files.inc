@@ -131,25 +131,35 @@ begin
   end;
 end;
 
+const
+  SheetFilters: array[0..3] of string = (
+    'Sheets (*.tsh, *.csv)|*.tsh;*.csv', 'TieSheet files (*.tsh)|*.tsh', 'CSV files (*.csv)|*.csv', 'All files|*');
+
 procedure TApp.DoLoad;
 var
-  v: UnicodeString;
+  fn, startDir: string;
 begin
   if not ConfirmDiscard then Exit;
-  if FileName <> '' then v := UTF8Decode(FileName) else v := UTF8Decode(Cfg.LastDir);
-  if not Prompt('Load file:', v, True) then Exit;
-  v := UnicodeString(Trim(string(v)));
-  if v = '' then Exit;
-  LoadPath(UTF8Encode(v));
+  startDir := Cfg.LastDir;
+  if (startDir = '') and (FileName <> '') then startDir := ExtractFilePath(FileName);
+  if not PickFile(pmOpen, 'Open file', startDir, '', SheetFilters, 0, fn) then Exit;
+  LoadPath(fn);
+end;
+
+{ a file that is about to be written over: ask, unless it is the one this sheet came from }
+function OverwriteOk(app: TApp; const fn, own: string): Boolean;
+begin
+  Result := True;
+  if (not FileExists(fn)) or (ExpandFileName(fn) = own) then Exit;
+  Result := app.AskChoice(UnicodeString('Replace ' + ExtractFileName(fn) + '?  (Y)es  (N)o'), 'YN') = 0;
 end;
 
 function TApp.DoSave(askName: Boolean): Boolean;
 var
-  v: UnicodeString;
-  fn, err, note: string;
+  fn, err, note, startDir, name: string;
   kind: TFileKind;
   vals: Boolean;
-  k: Integer;
+  k, fi: Integer;
 begin
   Result := False;
   fn := FileName;
@@ -157,12 +167,15 @@ begin
   vals := CsvValues;
   if (fn = '') or askName then
   begin
-    if fn <> '' then v := UTF8Decode(fn) else v := UTF8Decode(Cfg.LastDir + 'sheet.tsh');
-    if not Prompt('Save as:', v, True) then Exit;
-    v := UnicodeString(Trim(string(v)));
-    if v = '' then Exit;
-    fn := ExpandHome(UTF8Encode(v));
+    if fn <> '' then name := ExtractFileName(fn) else name := 'sheet.tsh';
+    startDir := Cfg.LastDir;
+    if (startDir = '') and (fn <> '') then startDir := ExtractFilePath(fn);
+    if LowerCase(ExtractFileExt(name)) = '.csv' then fi := 2
+    else if LowerCase(ExtractFileExt(name)) = '.tsh' then fi := 1
+    else fi := 0;
+    if not PickFile(pmSave, 'Save as', startDir, name, SheetFilters, fi, fn) then Exit;
     if ExtractFileExt(fn) = '' then fn := fn + '.tsh';
+    if not OverwriteOk(Self, fn, FileName) then Exit;
     if LowerCase(ExtractFileExt(fn)) = '.csv' then
     begin
       kind := fkCsv;

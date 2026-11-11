@@ -25,14 +25,15 @@ text p
 key left
 key right
 key escape
+pickdir build/test-out
 # output as a PDF (letter was switched to A4 in the preview and stays so) and as text
 key ctrl+o
 text p
-text build/test-out/print_a.pdf
+text print_a.pdf
 key return
 key ctrl+o
 text t
-text build/test-out/print_b.txt
+text print_b.txt
 key return
 # Ctrl tap works in the preview too
 ctap

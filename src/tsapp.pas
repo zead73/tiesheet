@@ -13,7 +13,7 @@ unit tsapp;
 interface
 
 uses
-  SysUtils, Classes, tssdl, tsconfig, tsgfx, tsdec, tsvalue, tsformula, tssheet, tscsv, tsfile, tsdate, tsprint;
+  SysUtils, Classes, tssdl, tsconfig, tsgfx, tsdec, tsvalue, tsformula, tssheet, tscsv, tsfile, tsdate, tsprint, tsdirs;
 
 const
   SYM_CTRLTAP = $7FFF0001;      { a Control key pressed and released on its own }
@@ -31,6 +31,7 @@ type
 
   TProc = procedure of object;
   TFileKind = (fkNone, fkTsh, fkCsv);
+  TPickMode = (pmOpen, pmSave);
 
   TUndoStep = record
     Text: UnicodeString;       { the whole sheet as a TieSheet file }
@@ -93,6 +94,16 @@ type
     HelpText, HelpLines: TStringList;
     HelpTop, HelpWrapW: Integer;
     PrintJob: TPrintJob;
+    { the file picker }
+    PkMode: TPickMode;
+    PkTitle, PkDir: string;
+    PkEntries: TDirEntries;
+    PkSel, PkTop, PkFilter, PkPos: Integer;
+    PkEdit: UnicodeString;
+    PkFresh, PkHidden, PkNavigated: Boolean;
+    PkFilterNames, PkFilterPats: TStringList;
+    PkPlaces: TPlaces;
+    PkPlaceSel: Integer;
     PrevPage, PrevLeft, PrevTop: Integer;
     FullScreen, Overlay: TProc;
     { ---- events and scripts ---- }
@@ -174,6 +185,14 @@ type
     procedure DoSort;
     function CurrentRegion(out c1, r1, c2, r2: Integer): Boolean;
     function BuildJob: Boolean;
+    function PickFile(mode: TPickMode; const title, startDir, startName: string; const filters: array of string;
+      filterIndex: Integer; out path: string): Boolean;
+    procedure PkLoad(const dir, focus: string);
+    procedure DrawPicker;
+    procedure DrawPlaces;
+    procedure PkEnter(var finished, ok: Boolean; out path: string);
+    function PkPlacesScreen: Boolean;
+    procedure PkMakeDir;
     procedure DoPreview;
     procedure DrawPreview;
     procedure DoOutput;
@@ -238,6 +257,8 @@ begin
   Gfx := TGfx.Create;
   Sheet := TSheet.Create;
   Script := TStringList.Create;
+  PkFilterNames := TStringList.Create;
+  PkFilterPats := TStringList.Create;
   HelpText := TStringList.Create;
   HelpLines := TStringList.Create;
   BlinkOn := True;
@@ -249,6 +270,8 @@ begin
   HelpLines.Free;
   HelpText.Free;
   Script.Free;
+  PkFilterNames.Free;
+  PkFilterPats.Free;
   Sheet.Free;
   Gfx.Free;
   inherited Destroy;
@@ -260,5 +283,6 @@ end;
 {$I tsapp_files.inc}
 {$I tsapp_screens.inc}
 {$I tsapp_print.inc}
+{$I tsapp_picker.inc}
 
 end.

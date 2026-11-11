@@ -1,0 +1,87 @@
+size 1100 600
+pickdir tests/fixtures
+# type a folder name and Enter goes into it; typing "b" jumps to b.tsh and Enter opens it
+key ctrl+l
+text picker
+key return
+text b
+key return
+dump build/test-out/picker_a.txt
+# the picker starts where the last file was; hidden files are off until Ctrl+H
+key ctrl+l
+key ctrl+h
+text .h
+key return
+dump build/test-out/picker_b.txt
+# folders are listed first: Down onto sub, Enter, Down onto d.csv, Enter
+key ctrl+l
+key down
+key return
+key down
+key return
+dump build/test-out/picker_c.txt
+# Backspace with nothing typed goes up; Tab cycles the filter until c.txt is shown (all files)
+key ctrl+l
+key backspace
+key tab
+key tab
+key tab
+text c
+key return
+dump build/test-out/picker_d.txt
+# Esc clears what was typed first, then cancels; the sheet is untouched
+key ctrl+l
+text nonsense
+key escape
+key escape
+text kept
+key return
+dump build/test-out/picker_e.txt
+# a name that is not there is refused and the picker stays; then a good one.  The sheet has unsaved
+# changes (kept): the picker asks first, and N goes on without saving
+key ctrl+l
+text n
+text no_such_file.csv
+key return
+key escape
+text a.csv
+key return
+dump build/test-out/picker_f.txt
+# places: F2 lists them, Esc comes back, Esc again leaves the picker
+key ctrl+l
+key f2
+key escape
+key escape
+# make a folder in build/test-out
+pickdir build/test-out
+key ctrl+l
+key f7
+text pk
+key return
+key escape
+# save: type a name, then move the highlight onto the folder pk and press Enter: it opens and keeps the
+# name; F10 saves there
+text typed
+key return
+key ctrl+shift+s
+text mysheet.tsh
+key down
+key return
+key f10
+# saving over a file that is not this sheet's own asks first: N leaves it alone
+text second
+key return
+key ctrl+shift+s
+text x1.tsh
+key return
+text more
+key return
+key ctrl+shift+s
+text x2.tsh
+key return
+key ctrl+shift+s
+text x1.tsh
+key return
+text n
+dump build/test-out/picker_g.txt
+quit

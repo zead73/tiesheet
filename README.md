@@ -6,7 +6,7 @@ money, lists and schedules, no charts or pivot tables. For anything complicated,
 **Status: it runs.** A character-cell screen like TiePaper's, driven from the keyboard (`docs/keys.md`, or F1).
 Entering and editing cells, selecting, copy / cut / paste (with the system clipboard), fill down and right,
 undo, column widths and formats, go to, find, sorting, inserting and deleting rows and columns (formulas
-follow), print preview and output as PDF or text, loading and saving. Packaging: an AppImage for Linux and an installer for Windows.
+follow), print preview and output as PDF or text, a file picker for loading and saving. Packaging: an AppImage for Linux and an installer for Windows.
 
 The engine under it (901 checks, on Linux and under wine for Windows):
 
@@ -25,6 +25,8 @@ The engine under it (901 checks, on Linux and under wine for Windows):
   sharing, e.g. with Excel)
 - the TieSheet file (`.tsh`): the cells as CSV plus a small header for column widths and cell formats
 - saving keeps the old file as `.bak`
+- a file picker in the Far style, after tiepick: one pane, typing goes to an edit line, Enter / Backspace / Tab (filter) /
+  F2 (places) / F7 (new folder) / Ctrl+H (hidden); used for Ctrl+L, Save As and the PDF / text output
 - printing: monospace pages (portrait, landscape or smaller type to fit the width, wide sheets in strips of
   columns), written as a PDF using the standard Courier font, or as text
 
@@ -42,5 +44,5 @@ tiesheet --convert in.csv out.tsh [--values]   # convert without a window
 ```
 
 Source: `src/tsdec.pas` (decimals), `tsvalue.pas`, `tsdate.pas`, `tsformula.pas` (parser and functions),
-`tssheet.pas` (cells, recalculation), `tscsv.pas`, `tsfile.pas`, and the screen: `tsapp*.inc`, `tsgfx.pas`, `tssdl.pas`
+`tssheet.pas` (cells, recalculation), `tscsv.pas`, `tsfile.pas`, `tsdirs.pas` (folders for the picker), and the screen: `tsapp*.inc`, `tsgfx.pas`, `tssdl.pas`
 (copied from TiePaper). MIT licence; the bundled font, Liberation Mono, keeps its own licence.

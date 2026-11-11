@@ -2,6 +2,7 @@ size 1100 600
 open tests/fixtures/schedule.csv
 today 46336
 dumpvalues build/test-out/files_loaded_values.txt
+pickdir build/test-out
 # change a cell and save as a TieSheet file
 key down
 key down
@@ -9,21 +10,21 @@ key down
 text 2026-12-01
 key return
 key ctrl+shift+s
-text build/test-out/files_a.tsh
+text files_a.tsh
 key return
 # now a CSV with formulas as typed
 key ctrl+shift+s
-text build/test-out/files_b.csv
+text files_b.csv
 key return
 text f
 # and one for sharing
 key ctrl+shift+s
-text build/test-out/files_c.csv
+text files_c.csv
 key return
 text v
 # save keeps working under the last name; load the .tsh back
 key ctrl+l
-text build/test-out/files_a.tsh
+text files_a.tsh
 key return
 dump build/test-out/files_d.txt
 quit

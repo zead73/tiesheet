@@ -262,6 +262,8 @@ begin
       SDL_SetClipboardText(PAnsiChar(u8));
       ClipValid := False;
     end
+    else if cmd = 'pickdir' then
+      Cfg.LastDir := IncludeTrailingPathDelimiter(ExpandFileName(Trim(arg)))
     else if cmd = 'today' then
     begin
       Sheet.Today := StrToIntDef(Trim(arg), Sheet.Today);

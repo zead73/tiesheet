@@ -155,8 +155,8 @@ begin
   t.Add('Ctrl+O|Output: a PDF or a text file.  The type is chosen to fit the width: portrait, landscape, smaller type; a very wide sheet is printed in strips of columns');
   t.Add('');
   t.Add('#Files');
-  t.Add('Ctrl+L|Load a file: a TieSheet file or a CSV');
-  t.Add('Ctrl+S / Ctrl+Shift+S|Save / save under another name');
+  t.Add('Ctrl+L|Open a file with the picker (a TieSheet file or a CSV).  Type to jump to a name or to enter a path, Enter opens a folder or the file, Backspace goes up, Tab changes the filter, F2 lists places (home, drives, bookmarks), F7 makes a folder, Ctrl+H shows hidden files, Esc cancels');
+  t.Add('Ctrl+S / Ctrl+Shift+S|Save / save under another name: the picker again, with the name on the edit line; F10 saves in the folder shown.  A name that exists asks before it is replaced');
   t.Add('Ctrl+Shift+X|Quit');
   t.Add('.tsh|The TieSheet file keeps formulas, column widths and formats.  It is plain text.');
   t.Add('.csv|A CSV keeps formulas as typed, or only their results for sharing (you are asked when you save).  Widths and formats are not kept in a CSV.');
