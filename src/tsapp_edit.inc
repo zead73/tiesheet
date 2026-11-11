@@ -574,8 +574,8 @@ begin
       'd': FillDown;
       'r': FillRight;
       'g': DoGoto;
-      'v': SetMsg('The print preview is not built yet');
-      'o': SetMsg('Output (PDF and text) is not built yet');
+      'v': DoPreview;
+      'o': DoOutput;
       'x': if ev.Shift then TryQuit;
     end;
     Exit;

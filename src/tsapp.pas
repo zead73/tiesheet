@@ -13,7 +13,7 @@ unit tsapp;
 interface
 
 uses
-  SysUtils, Classes, tssdl, tsconfig, tsgfx, tsdec, tsvalue, tsformula, tssheet, tscsv, tsfile, tsdate;
+  SysUtils, Classes, tssdl, tsconfig, tsgfx, tsdec, tsvalue, tsformula, tssheet, tscsv, tsfile, tsdate, tsprint;
 
 const
   SYM_CTRLTAP = $7FFF0001;      { a Control key pressed and released on its own }
@@ -92,6 +92,8 @@ type
     PromptYN, PromptFresh: Boolean;
     HelpText, HelpLines: TStringList;
     HelpTop, HelpWrapW: Integer;
+    PrintJob: TPrintJob;
+    PrevPage, PrevLeft, PrevTop: Integer;
     FullScreen, Overlay: TProc;
     { ---- events and scripts ---- }
     Script: TStringList;
@@ -171,6 +173,10 @@ type
     procedure DoDelete;
     procedure DoSort;
     function CurrentRegion(out c1, r1, c2, r2: Integer): Boolean;
+    function BuildJob: Boolean;
+    procedure DoPreview;
+    procedure DrawPreview;
+    procedure DoOutput;
   end;
 
 implementation
@@ -253,5 +259,6 @@ end;
 {$I tsapp_edit.inc}
 {$I tsapp_files.inc}
 {$I tsapp_screens.inc}
+{$I tsapp_print.inc}
 
 end.

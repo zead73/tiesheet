@@ -9,7 +9,7 @@ program test_engine;
 uses
   {$IFDEF USECW}cwstring,{$ENDIF}
   {$IFDEF WINDOWS}Windows,{$ENDIF}
-  SysUtils, Classes, tsdec, tsvalue, tsdate, tsformula, tssheet, tscsv, tsfile;
+  SysUtils, Classes, tsdec, tsvalue, tsdate, tsformula, tssheet, tscsv, tsfile, tsprint;
 
 var
   Fails, Passes: Integer;
@@ -168,6 +168,7 @@ end;
 {$I tests_sheet.inc}
 {$I tests_files.inc}
 {$I tests_structure.inc}
+{$I tests_print.inc}
 
 begin
   {$IFDEF WINDOWS}
@@ -191,6 +192,7 @@ begin
   TestFiles;
   TestInsertDelete;
   TestSort;
+  TestPrint;
   WriteLn(Passes, ' passed, ', Fails, ' failed');
   if Fails > 0 then Halt(1);
 end.

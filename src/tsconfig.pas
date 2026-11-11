@@ -32,6 +32,7 @@ type
     FontDir: string;             { empty = look in the usual places }
     WinW, WinH: Integer;
     LastDir: string;
+    Paper: Integer;              { 0 = Letter, 1 = A4 }
   end;
 
 procedure DefaultSettings(var s: TSettings);
@@ -59,6 +60,7 @@ begin
   s.WinW := 1100;
   s.WinH := 760;
   s.LastDir := '';
+  s.Paper := 0;
 end;
 
 function AppDir: string;
@@ -108,6 +110,7 @@ begin
     s.WinW := Clamp(ini.ReadInteger('window', 'width', s.WinW), 400, 8000);
     s.WinH := Clamp(ini.ReadInteger('window', 'height', s.WinH), 300, 6000);
     s.LastDir := ini.ReadString('files', 'lastdir', s.LastDir);
+    s.Paper := Clamp(ini.ReadInteger('output', 'paper', s.Paper), 0, 1);
   finally
     ini.Free;
   end;
@@ -133,6 +136,7 @@ begin
     ini.WriteInteger('window', 'width', s.WinW);
     ini.WriteInteger('window', 'height', s.WinH);
     ini.WriteString('files', 'lastdir', s.LastDir);
+    ini.WriteInteger('output', 'paper', s.Paper);
   finally
     ini.Free;
   end;

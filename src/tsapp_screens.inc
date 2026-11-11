@@ -150,6 +150,10 @@ begin
   t.Add('F5|Sort a block of rows by one column: you are asked which column, which way, and whether the first row is a heading.  One cell selected: the block around it');
   t.Add('F4|Format the selected cells: general, number, currency, percent, date.  With Ctrl+Space first, the whole column gets the format, also for numbers typed later');
   t.Add('');
+  t.Add('#Printing');
+  t.Add('Ctrl+V|Print preview of the selected cells, or of the whole sheet.  PgUp/PgDn change the page, arrows scroll, P switches between Letter and A4, Esc closes');
+  t.Add('Ctrl+O|Output: a PDF or a text file.  The type is chosen to fit the width: portrait, landscape, smaller type; a very wide sheet is printed in strips of columns');
+  t.Add('');
   t.Add('#Files');
   t.Add('Ctrl+L|Load a file: a TieSheet file or a CSV');
   t.Add('Ctrl+S / Ctrl+Shift+S|Save / save under another name');
@@ -176,8 +180,6 @@ begin
   t.Add('Dates|DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF');
   t.Add('Numbers are exact: 0.1 + 0.2 is 0.3, and money adds up to the cent.');
   t.Add('');
-  t.Add('#Not built yet');
-  t.Add('The print preview (Ctrl+V) and output (Ctrl+O).');
 end;
 
 procedure TApp.DoHelp;

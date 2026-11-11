@@ -5,10 +5,10 @@ money, lists and schedules, no charts or pivot tables. For anything complicated,
 
 **Status: it runs.** A character-cell screen like TiePaper's, driven from the keyboard (`docs/keys.md`, or F1).
 Entering and editing cells, selecting, copy / cut / paste (with the system clipboard), fill down and right,
-undo, column widths and formats, go to, find, loading and saving. Not built yet: sorting, inserting and
-deleting rows and columns, printing (PDF), the icon and packaging.
+undo, column widths and formats, go to, find, sorting, inserting and deleting rows and columns (formulas
+follow), print preview and output as PDF or text, loading and saving. Not built yet: the icon and packaging.
 
-The engine under it (767 checks, on Linux and under wine for Windows):
+The engine under it (901 checks, on Linux and under wine for Windows):
 
 - exact decimal arithmetic (`0.1 + 0.2` is `0.3`, money adds up to the cent), 34 significant digits
 - formulas in the usual syntax, with `$A$1`, ranges, `&`, `%`, error values and about 50 functions:
@@ -25,6 +25,8 @@ The engine under it (767 checks, on Linux and under wine for Windows):
   sharing, e.g. with Excel)
 - the TieSheet file (`.tsh`): the cells as CSV plus a small header for column widths and cell formats
 - saving keeps the old file as `.bak`
+- printing: monospace pages (portrait, landscape or smaller type to fit the width, wide sheets in strips of
+  columns), written as a PDF using the standard Courier font, or as text
 
 Where the behaviour was in doubt it was checked against LibreOffice Calc (`tests/oracle/run.sh`).
 

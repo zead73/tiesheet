@@ -45,6 +45,8 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 
 | Keys | Action |
 |------|--------|
+| Ctrl++ / Ctrl+- | Insert / delete the selected rows (after Ctrl+Space: the selected columns); formulas follow, and what pointed at a deleted row or column shows `#REF!` |
+| F5 | Sort a block of rows by one column (asks which column, which way, and whether the first row is a heading); with one cell selected, the block around it |
 | F3 | Column width |
 | F4 | Format the selection: general, number, currency, percent, date (after Ctrl+Space, the whole column, also for numbers typed later) |
 | Ctrl+L | Load a file (`.tsh` or `.csv`) |
@@ -52,6 +54,11 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | Ctrl+Shift+X | Quit |
 | F1 | Help |
 
-## Kept as in TiePaper (not built yet in the sheet)
+## Printing
 
-Ctrl+V (print preview) and Ctrl+O (output: PDF, text) keep TiePaper's meaning; F9 is the screen options.
+| Keys | Action |
+|------|--------|
+| Ctrl+V | Print preview of the selected cells, or of the whole sheet (PgUp/PgDn page, arrows scroll, P switches Letter / A4, Esc closes) |
+| Ctrl+O | Output: a PDF or a text file |
+
+F9 (screen options) is kept as in TiePaper's F2 but is not built yet.

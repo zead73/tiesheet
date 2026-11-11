@@ -1,0 +1,44 @@
+size 1100 600
+text Item
+key tab
+text Amount
+key return
+key left
+text Rent
+key tab
+text 1200
+key return
+key left
+text Food
+key tab
+text 300.50
+key return
+key left
+text Total
+key tab
+text =SUM(B2:B3)
+key return
+# preview: next page (there is only one), switch paper, close
+key ctrl+v
+key pagedown
+text p
+key left
+key right
+key escape
+# output as a PDF (letter was switched to A4 in the preview and stays so) and as text
+key ctrl+o
+text p
+text build/test-out/print_a.pdf
+key return
+key ctrl+o
+text t
+text build/test-out/print_b.txt
+key return
+# Ctrl tap works in the preview too
+ctap
+key v
+key escape
+text after
+key return
+dump build/test-out/print.txt
+quit

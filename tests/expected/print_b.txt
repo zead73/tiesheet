@@ -1,0 +1,8 @@
+TieSheet
+
+Item        Amount
+Rent               1200
+Food             300.50
+Total            1500.5
+
+Page 1 of 1
