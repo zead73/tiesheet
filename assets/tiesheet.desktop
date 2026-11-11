@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=TieSheet
+GenericName=Spreadsheet
+Comment=A small keyboard-first spreadsheet in the style of TiePaper
+Exec=tiesheet %f
+Icon=tiesheet
+Terminal=false
+Categories=Office;Spreadsheet;
+Keywords=spreadsheet;csv;budget;
+StartupWMClass=tiesheet

@@ -6,7 +6,7 @@ money, lists and schedules, no charts or pivot tables. For anything complicated,
 **Status: it runs.** A character-cell screen like TiePaper's, driven from the keyboard (`docs/keys.md`, or F1).
 Entering and editing cells, selecting, copy / cut / paste (with the system clipboard), fill down and right,
 undo, column widths and formats, go to, find, sorting, inserting and deleting rows and columns (formulas
-follow), print preview and output as PDF or text, loading and saving. Not built yet: the icon and packaging.
+follow), print preview and output as PDF or text, loading and saving. Packaging: an AppImage for Linux and an installer for Windows.
 
 The engine under it (901 checks, on Linux and under wine for Windows):
 
@@ -36,6 +36,9 @@ Where the behaviour was in doubt it was checked against LibreOffice Calc (`tests
 tests/run-tests.sh [win]      # engine tests (the second: under wine)
 tests/run-gui-tests.sh [win]  # the real program, driven by scripted keystrokes, headless
 tiesheet --convert in.csv out.tsh [--values]   # convert without a window
+./make-appimage.sh            # dist/tiesheet-x86_64.AppImage (needs docker; builds SDL2 in a Debian 12 container)
+./make-installer.sh           # dist/tiesheet-setup.exe (needs makensis)
+./install-desktop.sh          # adds TieSheet to the application menu of the current user
 ```
 
 Source: `src/tsdec.pas` (decimals), `tsvalue.pas`, `tsdate.pas`, `tsformula.pas` (parser and functions),

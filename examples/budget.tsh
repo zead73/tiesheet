@@ -1,0 +1,13 @@
+tiesheet 1
+width A 24
+width B 14
+colformat B currency 2 1
+---
+Monthly budget,Amount
+Rent,1200
+Groceries,420.50
+Internet,65
+Phone,45
+Savings,250
+Total,=SUM(B2:B6)
+Per day (30 days),=B7/30
