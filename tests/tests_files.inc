@@ -236,6 +236,15 @@ begin
     CheckEq(string(sh2.Display(1, 3)), '5%', 'and the percentage');
     sh2.SetEntry(1, 5, '7');
     CheckEq(string(sh2.Display(1, 5)), '$7.00', 'and it still applies to what is typed next');
+    sh2.SetEntry(1, 6, '420.5');
+    CheckEq(string(sh2.Display(1, 6)), '$420.50', 'a number typed with decimals takes the column format too');
+    sh2.SetEntry(1, 7, '1,234.5');
+    CheckEq(string(sh2.Display(1, 7)), '$1,234.50', 'also with a comma');
+    sh2.SetEntry(1, 8, '$9');
+    CheckEq(string(sh2.Display(1, 8)), '$9.00', 'a dollar sign keeps what it says');
+    CheckEq(SheetFromText(sh, SheetToText(sh2), warn), '', 'the file with those cells reads back');
+    CheckEq(string(sh.Display(1, 6)), '$420.50', 'and they still show as money');
+    CheckEq(string(SheetToText(sh)), string(SheetToText(sh2)), 'the same file again: no per-cell formats were needed');
     { not ours, and newer }
     Check(SheetFromText(sh2, 'hello', nil) <> '', 'not a TieSheet file');
     Check(SheetFromText(sh2, 'tiesheet 1'#10'a,b'#10, nil) <> '', 'no --- line');

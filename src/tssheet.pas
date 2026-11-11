@@ -406,7 +406,9 @@ begin
   c.Kind := ent.Kind;
   c.Value := ent.Value;
   c.Fmt := ent.Fmt;
-  if (ent.Fmt.Kind = nfGeneral) and (ent.Kind in [ckNumber, ckFormula]) then c.Fmt := ColFormat(col);
+  { a column's own format wins over the plain forms typing gives (12 or 12.50); $, % and dates stay as typed }
+  if (ent.Fmt.Kind in [nfGeneral, nfNumber]) and (ent.Kind in [ckNumber, ckFormula]) and (ColFormat(col).Kind <> nfGeneral) then
+    c.Fmt := ColFormat(col);
   c.Node := node;
   c.Deps := deps;
   FDirty := True;
@@ -810,7 +812,8 @@ begin
   if ParseEntry(c.Raw, ent) then
   begin
     Result := ent.Fmt;
-    if (Result.Kind = nfGeneral) and (ent.Kind = ckNumber) then Result := ColFormat(col);
+    if (Result.Kind in [nfGeneral, nfNumber]) and (ent.Kind = ckNumber) and (ColFormat(col).Kind <> nfGeneral) then
+      Result := ColFormat(col);
   end;
 end;
 

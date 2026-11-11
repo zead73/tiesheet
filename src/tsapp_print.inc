@@ -74,8 +74,9 @@ begin
   Line(0, pg.Header, gray);
   for i := 0 to High(pg.Lines) do Line(2 + i, pg.Lines[i], black);
   Line(pageRows - 1, pg.Footer, gray);
-  if PrintJob.CharsPerLine > w then
-    Gfx.PutText(Gfx.Cols - 14, 1, '(scroll right)', dimC);
+  { the page goes on beyond the screen: arrows at the edges of the paper }
+  if PrevLeft > 0 then Gfx.PutText(1, 3, '<', gray);
+  if PrevLeft + w < PrintJob.CharsPerLine then Gfx.PutText(Gfx.Cols - 2, 3, '>', gray);
 end;
 
 procedure TApp.DoPreview;

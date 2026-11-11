@@ -17,6 +17,8 @@ fail=0
 for s in tests/scripts/*.txt; do
   name=$(basename "$s" .txt)
   rm -rf build/home; mkdir -p build/home      # every script starts with a clean configuration
+  # (under wine the settings live in the wine prefix, not in HOME)
+  [ "$1" = win ] && find "$WINEPREFIX" -name tiesheet.ini -delete 2>/dev/null
   timeout 120 $RUN --script "$s" || { echo "FAIL: $name did not run"; fail=1; }
 done
 if [ "$1" = update ]; then
