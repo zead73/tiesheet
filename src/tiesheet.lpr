@@ -16,7 +16,7 @@ uses
   Math, SysUtils, Classes, tsconfig, tssdl, tssheet, tscsv, tsfile, tsapp;
 
 const
-  Version = '0.1.0';
+  Version = '0.1.1';
 
 {$IFDEF WINDOWS}
 function AttachConsole(pid: LongWord): LongBool; stdcall; external 'kernel32.dll' name 'AttachConsole';

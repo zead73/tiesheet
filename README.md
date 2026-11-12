@@ -23,7 +23,7 @@ LibreOffice. What it does, it tries to do carefully:
 
 ## Status
 
-Version 0.1.0: it works and has a thorough test suite, but it is young. Tested on Linux (Arch) and,
+Version 0.1.1: it works and has a thorough test suite, but it is young. Tested on Linux (Arch) and,
 headless under wine, on Windows. Not yet tried on a real Windows machine.
 
 ## Using it
