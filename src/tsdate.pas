@@ -15,6 +15,9 @@ function SerialFromYMD(y, m, d: Int64; out serial: Int64): Boolean;
 procedure YMDFromSerial(serial: Int64; out y, m, d: Integer);
 function SerialValid(serial: Int64): Boolean;
 function ParseIsoDate(const s: UnicodeString; out serial: Int64): Boolean;   { YYYY-MM-DD, strictly }
+{ American style: month/day/year, as 8/1/2026, 08/01/2026 or 8/1/26 (a two-digit year 00-29 is 20xx, 30-99 is
+  19xx, like DATE); - may stand for /.  Month first, always: 13/1/2026 is not a date. }
+function ParseUsDate(const s: UnicodeString; out serial: Int64): Boolean;
 function SerialToIso(serial: Int64): string;
 function WeekdaySunday0(serial: Int64): Integer;                  { 0 = Sunday .. 6 = Saturday }
 function AddMonths(serial: Int64; months: Int64; out res: Int64): Boolean;   { the day is clamped to the month }
@@ -116,6 +119,45 @@ begin
   y := StrToInt(string(Copy(s, 1, 4)));
   m := StrToInt(string(Copy(s, 6, 2)));
   d := StrToInt(string(Copy(s, 9, 2)));
+  if (y < 1) or (m < 1) or (m > 12) or (d < 1) or (d > DaysInMonth(y, m)) then Exit;
+  Result := SerialFromYMD(y, m, d, serial);
+end;
+
+function ParseUsDate(const s: UnicodeString; out serial: Int64): Boolean;
+var
+  parts: array[0..2] of UnicodeString;
+  n, i, y, m, d: Integer;
+  sep: WideChar;
+  ch: WideChar;
+begin
+  serial := 0;
+  Result := False;
+  if (Length(s) < 5) or (Length(s) > 10) then Exit;
+  if Pos('/', string(s)) > 0 then sep := '/' else sep := '-';
+  n := 0;
+  parts[0] := ''; parts[1] := ''; parts[2] := '';
+  for i := 1 to Length(s) do
+  begin
+    ch := s[i];
+    if ch = sep then
+    begin
+      Inc(n);
+      if n > 2 then Exit;
+    end
+    else if (ch >= '0') and (ch <= '9') then parts[n] := parts[n] + ch
+    else Exit;
+  end;
+  if n <> 2 then Exit;
+  if (parts[0] = '') or (parts[1] = '') or (parts[2] = '') then Exit;
+  if (Length(parts[0]) > 2) or (Length(parts[1]) > 2) then Exit;
+  if not (Length(parts[2]) in [2, 4]) then Exit;
+  m := StrToInt(string(parts[0]));
+  d := StrToInt(string(parts[1]));
+  y := StrToInt(string(parts[2]));
+  if Length(parts[2]) = 2 then
+  begin
+    if y < 30 then Inc(y, 2000) else Inc(y, 1900);
+  end;
   if (y < 1) or (m < 1) or (m > 12) or (d < 1) or (d > DaysInMonth(y, m)) then Exit;
   Result := SerialFromYMD(y, m, d, serial);
 end;

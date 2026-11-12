@@ -600,3 +600,93 @@ begin
     sh.Free;
   end;
 end;
+
+{ ---- dates typed month first ---- }
+
+procedure TestUsDates;
+var
+  sh: TSheet;
+  s: Int64;
+  rows: TCsvRows;
+
+  procedure U(const typed, shown: string);
+  begin
+    Check(sh.SetEntry(0, 0, UnicodeString(typed)) = '', typed + ' accepted');
+    CheckEq(string(sh.Display(0, 0)), shown, 'typing [' + typed + ']');
+    Check(sh.GetKind(0, 0) = ckNumber, typed + ' is a date, so a number');
+    CheckEq(string(sh.GetRaw(0, 0)), shown, typed + ' is kept as ' + shown);
+    Check(sh.GetFormat(0, 0).Kind = nfDate, typed + ' shows as a date');
+  end;
+
+  procedure Not_(const typed: string);
+  begin
+    Check(sh.SetEntry(0, 0, UnicodeString(typed)) = '', typed + ' accepted');
+    Check(sh.GetKind(0, 0) = ckText, typed + ' is not a date');
+    CheckEq(string(sh.GetRaw(0, 0)), typed, typed + ' stays as typed');
+  end;
+
+begin
+  Check(ParseUsDate('8/1/2026', s) and (SerialToIso(s) = '2026-08-01'), 'month first: 8/1/2026 is August 1st');
+  Check(not ParseUsDate('2026-08-01', s), 'ISO is not an American date');
+  sh := TSheet.Create;
+  try
+    sh.Today := 46336;
+    U('8/1/2026', '2026-08-01');
+    U('08/01/2026', '2026-08-01');
+    U('12/31/2026', '2026-12-31');
+    U('1/1/2027', '2027-01-01');
+    U('2/29/2024', '2024-02-29');
+    U('8/1/26', '2026-08-01');
+    U('8/1/29', '2029-08-01');
+    U('8/1/30', '1930-08-01');
+    U('8/1/99', '1999-08-01');
+    U('8-1-2026', '2026-08-01');
+    U(' 8/1/2026 ', '2026-08-01');
+    Not_('2/29/2026');
+    Not_('13/1/2026');
+    Not_('0/1/2026');
+    Not_('1/0/2026');
+    Not_('1/32/2026');
+    Not_('4/31/2026');
+    Not_('1/2');
+    Not_('1/2/3');
+    Not_('1/2/20266');
+    Not_('1/2/2026/4');
+    Not_('1//2026');
+    Not_('a/1/2026');
+    Not_('8/1/2026x');
+    Not_('555-12-34');
+    { they are real dates: arithmetic, sorting, functions }
+    sh.Clear;
+    sh.SetEntry(0, 0, '8/1/2026');
+    sh.SetEntry(0, 1, '9/1/2026');
+    sh.SetEntry(1, 0, '=A2-A1');
+    CheckEq(string(sh.Display(1, 0)), '31', 'two dates differ by a number of days');
+    sh.SetEntry(1, 1, '=A1+30');
+    CheckEq(string(sh.Display(1, 1)), '2026-08-31', 'and a date plus days is a date');
+    sh.SetEntry(1, 2, '=MONTH(A2)');
+    CheckEq(string(sh.Display(1, 2)), '9', 'the date functions read them');
+    sh.SetEntry(1, 3, '=WEEKDAY(A1)');
+    CheckEq(string(sh.Display(1, 3)), '7', 'August 1st 2026 is a Saturday');
+    sh.SetEntry(1, 4, '=YEAR("12/25/2027")');
+    CheckEq(string(sh.Display(1, 4)), '2027', 'also as text inside a function');
+    sh.Clear;
+    sh.SetEntry(0, 0, '1/1/2027');
+    sh.SetEntry(0, 1, '8/1/2026');
+    sh.SetEntry(0, 2, '11/1/2026');
+    sh.SortRows(0, 0, 0, 2, 0, True);
+    CheckEq(string(sh.Display(0, 0)) + ' ' + string(sh.Display(0, 1)) + ' ' + string(sh.Display(0, 2)), '2026-08-01 2026-11-01 2027-01-01',
+      'sorting by date goes by the calendar (as text, 01/01/2027 would have come first)');
+    { a file or a CSV with them in comes out with ISO dates }
+    sh.Clear;
+    ParseCsv('Date,Paid'#10'08/01/2026,1000'#10'9/1/26,500'#10, ',', rows);
+    ImportCsv(sh, 'Date,Paid'#10'08/01/2026,1000'#10'9/1/26,500'#10, nil);
+    CheckEq(string(sh.Display(0, 1)), '2026-08-01', 'a CSV date, month first');
+    CheckEq(string(sh.Display(0, 2)), '2026-09-01', 'with a two-digit year');
+    CheckEq(string(ExportCsv(sh, False)), 'Date,Paid'#10'2026-08-01,1000'#10'2026-09-01,500'#10, 'and it is written out as ISO');
+    Check(SheetFromText(sh, 'tiesheet 1'#10'---'#10'Date,Paid'#10'08/01/2026,1000'#10, nil) = '', 'an older file with such dates in');
+    CheckEq(string(sh.GetRaw(0, 1)), '2026-08-01', 'is read as dates and will be saved as ISO');
+  finally
+    sh.Free;
+  end;
+end;

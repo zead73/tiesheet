@@ -319,6 +319,15 @@ begin
     ent.Value := VBool(False);
     Exit;
   end;
+  { a date typed month first (8/1/2026) is kept as the unambiguous 2026-08-01 }
+  if ParseUsDate(t, serial) then
+  begin
+    ent.Raw := UnicodeString(SerialToIso(serial));
+    ent.Kind := ckNumber;
+    ent.Value := VNum(DecFromInt(serial));
+    ent.Fmt.Kind := nfDate;
+    Exit;
+  end;
   if ParseIsoDate(t, serial) then
   begin
     ent.Kind := ckNumber;

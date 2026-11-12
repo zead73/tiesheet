@@ -182,6 +182,7 @@ begin
   TestFormulaSemantics;
   TestFormulaRefusals;
   TestEntries;
+  TestUsDates;
   TestFormatting;
   TestRecalc;
   TestShifting;

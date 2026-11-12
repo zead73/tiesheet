@@ -1,0 +1,59 @@
+size 1100 600
+today 46336
+# dates typed month first become dates shown, and saved, as yyyy-mm-dd; a running balance on them
+text Date
+key tab
+text Paid
+key tab
+text Balance
+key return
+key left
+key left
+text 11/1/2026
+key tab
+text 1000
+key return
+key left
+text 8/1/2026
+key tab
+text 1000
+key return
+key left
+text 9/01/26
+key tab
+text 500
+key return
+key left
+text 1/1/2027
+key tab
+key return
+# the balance column: price 7000 in E1, one formula in C2 filled down over C2:C6
+key ctrl+g
+text e1
+key return
+text 7000
+key return
+key ctrl+g
+text c2
+key return
+text =IF(A2="","",$E$1-SUM($B$2:B2))
+key return
+key up
+key shift+down
+key shift+down
+key shift+down
+key shift+down
+key ctrl+d
+dump build/test-out/usdates_a.txt
+dumpvalues build/test-out/usdates_a_values.txt
+# sort by the date: the calendar order, not the order of the text
+key ctrl+home
+key down
+key f5
+text a
+key return
+text a
+text y
+dump build/test-out/usdates_b.txt
+dumpvalues build/test-out/usdates_b_values.txt
+quit

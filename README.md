@@ -48,7 +48,7 @@ The essentials:
 ### What typing means
 
 `12.50` stays `12.50`; `$1,234.50` is money; `5%` is a percentage; `2026-11-10` is a date; `(5)` is minus
-five; `=SUM(B2:B9)` is a formula; `'007` is text. A column can have its own format (select it with
+five; `8/1/2026` is a date typed month first, kept as `2026-08-01`; `=SUM(B2:B9)` is a formula; `'007` is text. A column can have its own format (select it with
 Ctrl+Space, then F4), which numbers typed into it afterwards take.
 
 ### Functions
@@ -98,7 +98,7 @@ loaded at run time, so nothing is linked against them).
 ## Tests
 
 ```
-tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (987 checks)
+tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (1097 checks)
 tests/run-gui-tests.sh [win]  # the real program driven by scripted keystrokes, headless
 ```
 

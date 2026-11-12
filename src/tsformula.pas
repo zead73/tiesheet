@@ -1256,6 +1256,7 @@ begin
   if v.Kind = vkText then
   begin
     if ParseIsoDate(UnicodeString(Trim(string(v.Text))), serial) then Exit(True);
+    if ParseUsDate(UnicodeString(Trim(string(v.Text))), serial) then Exit(True);
   end;
   if not ToNum(v, d) then begin ev := VErr(ecValue); Exit(False); end;
   d := DecRound(d, 0, rmFloor);

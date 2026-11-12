@@ -166,6 +166,7 @@ begin
   t.Add('12.50, $1,234.50, 5%|Numbers; they are shown the way they were typed');
   t.Add('(5)|Minus five');
   t.Add('2026-11-10|A date');
+  t.Add('8/1/2026, 08/01/26|A date typed month first (the American way); it becomes 2026-08-01, in the cell and in the file');
   t.Add('TRUE, FALSE|Yes / no');
   t.Add('''007|Text, even when it looks like something else');
   t.Add('Anything else|Text');
