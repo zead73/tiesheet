@@ -1,0 +1,117 @@
+size 1100 600
+today 46336
+# Pointing: while a formula is typed, the arrow keys pick the cells
+# A1:A4 = 10 20 30 40, B1 = 5
+text 10
+key return
+text 20
+key return
+text 30
+key return
+text 40
+key return
+key ctrl+home
+key right
+text 5
+key return
+# C1: =  then Left Left picks A1, + then Left picks B1
+key ctrl+home
+key right
+key right
+text =
+key left
+key left
+text +
+key left
+key return
+dump build/test-out/point_a.txt
+# D1: =SUM(  then Down x3 with Shift picks A1... from D1 the pointer starts at D1
+key ctrl+home
+key right
+key right
+key right
+text =SUM(
+key left
+key left
+key left
+key shift+down
+key shift+down
+key shift+down
+text )
+key return
+dump build/test-out/point_b.txt
+# E1: =SUM(A1:  then Down picks the end of the range, started by typing A1:
+key ctrl+home
+key right
+key right
+key right
+key right
+text =SUM(A1:
+key left
+key left
+key left
+key left
+key down
+key down
+key down
+text )
+key return
+dump build/test-out/point_c.txt
+# a cell is not picked where none is expected: Left just moves the text cursor, Down commits
+key ctrl+home
+key down
+key down
+key down
+key down
+text =5
+key left
+text 1
+key return
+dump build/test-out/point_d.txt
+# inside a piece of text the arrows only move the cursor
+key ctrl+home
+key down
+key down
+key down
+key down
+key down
+text ="a=
+key left
+key left
+text b
+key end
+text "
+key return
+dump build/test-out/point_e.txt
+# at the edge of the sheet the pointer stays put: B7, Left four times gives A7
+key ctrl+home
+key right
+key down
+key down
+key down
+key down
+key down
+key down
+text =
+key left
+key left
+key left
+key left
+key return
+dump build/test-out/point_f.txt
+# Esc leaves the formula untouched and a later arrow moves the cursor as before
+key ctrl+home
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+text =1+
+key left
+key escape
+key down
+text 7
+key return
+dump build/test-out/point_g.txt

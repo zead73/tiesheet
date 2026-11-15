@@ -1,0 +1,52 @@
+size 1100 600
+today 46336
+# Screen options on F9: change a few things and look at what the settings became
+text 10
+key return
+text =A1*2
+key return
+key f9
+shot build/test-out/options_menu.bmp
+# the text colour moves on one
+key right
+# the background walks round the palette and steps over the text colour
+key down
+key right
+key right
+key right
+key right
+key right
+key right
+key right
+key right
+key right
+# the font and the paper
+key down
+key down
+key down
+key down
+key down
+key down
+key right
+key down
+key right
+key escape
+dumpconfig build/test-out/options_a.txt
+# the same screen options again: the defaults come back with Enter on the last line
+key f9
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key return
+key escape
+dumpconfig build/test-out/options_b.txt
+# and the sheet still works afterwards
+text 3
+key return
+dump build/test-out/options_c.txt

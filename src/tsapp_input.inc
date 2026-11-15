@@ -262,6 +262,16 @@ begin
       SDL_SetClipboardText(PAnsiChar(u8));
       ClipValid := False;
     end
+    else if cmd = 'dumpconfig' then
+    begin
+      { the settings that matter, as text, for the tests }
+      AssignFile(f, Trim(arg));
+      Rewrite(f);
+      Write(f, 'text=', Cfg.ColText, ' back=', Cfg.ColBack, ' border=', Cfg.ColBorder, ' formula=', Cfg.ColFormula, #10);
+      Write(f, 'error=', Cfg.ColError, ' header=', Cfg.ColHeader, ' select=', Cfg.ColSelect, #10);
+      Write(f, 'font=', Cfg.FontSize, ' paper=', Cfg.Paper, #10);
+      CloseFile(f);
+    end
     else if cmd = 'pickdir' then
       Cfg.LastDir := IncludeTrailingPathDelimiter(ExpandFileName(Trim(arg)))
     else if cmd = 'today' then

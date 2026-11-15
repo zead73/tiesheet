@@ -169,7 +169,7 @@ type
   TFn = (fnSum, fnAverage, fnMin, fnMax, fnCount, fnCounta, fnProduct, fnAbs, fnRound, fnRoundUp,
     fnRoundDown, fnInt, fnMod, fnPower, fnSqrt, fnIf, fnAnd, fnOr, fnNot, fnIfError, fnTrue, fnFalse,
     fnLen, fnLeft, fnRight, fnMid, fnUpper, fnLower, fnTrim, fnConcat, fnValue, fnSumIf, fnCountIf,
-    fnAverageIf, fnDate, fnYear, fnMonth, fnDay, fnWeekday, fnToday, fnDays, fnEdate, fnDatedif, fnIsBlank,
+    fnAverageIf, fnSumIfs, fnCountIfs, fnAverageIfs, fnMinIfs, fnMaxIfs, fnPmt, fnFv, fnPv, fnDate, fnYear, fnMonth, fnDay, fnWeekday, fnToday, fnDays, fnEdate, fnDatedif, fnIsBlank,
     fnIsNumber, fnIsText, fnIsError);
 
   TFuncInfo = record
@@ -179,7 +179,7 @@ type
   end;
 
 const
-  FuncTable: array[0..48] of TFuncInfo = (
+  FuncTable: array[0..56] of TFuncInfo = (
     (Name: 'SUM'; Id: fnSum; MinArgs: 1; MaxArgs: -1),
     (Name: 'AVERAGE'; Id: fnAverage; MinArgs: 1; MaxArgs: -1),
     (Name: 'MIN'; Id: fnMin; MinArgs: 1; MaxArgs: -1),
@@ -215,6 +215,14 @@ const
     (Name: 'SUMIF'; Id: fnSumIf; MinArgs: 2; MaxArgs: 3),
     (Name: 'COUNTIF'; Id: fnCountIf; MinArgs: 2; MaxArgs: 2),
     (Name: 'AVERAGEIF'; Id: fnAverageIf; MinArgs: 2; MaxArgs: 3),
+    (Name: 'SUMIFS'; Id: fnSumIfs; MinArgs: 3; MaxArgs: -1),
+    (Name: 'COUNTIFS'; Id: fnCountIfs; MinArgs: 2; MaxArgs: -1),
+    (Name: 'AVERAGEIFS'; Id: fnAverageIfs; MinArgs: 3; MaxArgs: -1),
+    (Name: 'MINIFS'; Id: fnMinIfs; MinArgs: 3; MaxArgs: -1),
+    (Name: 'MAXIFS'; Id: fnMaxIfs; MinArgs: 3; MaxArgs: -1),
+    (Name: 'PMT'; Id: fnPmt; MinArgs: 3; MaxArgs: 5),
+    (Name: 'FV'; Id: fnFv; MinArgs: 3; MaxArgs: 5),
+    (Name: 'PV'; Id: fnPv; MinArgs: 3; MaxArgs: 5),
     (Name: 'DATE'; Id: fnDate; MinArgs: 3; MaxArgs: 3),
     (Name: 'YEAR'; Id: fnYear; MinArgs: 1; MaxArgs: 1),
     (Name: 'MONTH'; Id: fnMonth; MinArgs: 1; MaxArgs: 1),
@@ -797,6 +805,7 @@ type
     AccErr: TValue;
     AccHasErr: Boolean;
     AccLogic: Boolean;
+    AccDates: Boolean;           { every number MIN/MAX looked at was a date }
     { conditional sums }
     Crit: TCriteria;
     CritC1, CritR1, SumC1, SumR1: Integer;
@@ -805,6 +814,12 @@ type
     CondCount: Integer;
     CondErr: TValue;
     CondHasErr: Boolean;
+    { conditions on several ranges (SUMIFS and the like) }
+    MCrit: array of TCriteria;
+    MOffC, MOffR: array of Integer;
+    MBaseC, MBaseR, MValC, MValR, MMode: Integer;
+    MHasVal, MAny, MDates: Boolean;
+    MBest: TDec;
 
     function Eval(n: TNode): TValue;
     function EvalBinary(n: TNode): TValue;
@@ -818,6 +833,10 @@ type
     procedure AccDirect(const v: TValue);
     function Aggregate(n: TNode; kind: TAccKind): TValue;
     function Conditional(n: TNode; mode: Integer): TValue;
+    procedure VisitRange(a: TNode; matchEmpty: Boolean; visit: TCellVisit);
+    procedure VisitMulti(col, row: Integer; const v: TValue);
+    function MultiCond(n: TNode; mode: Integer): TValue;
+    function Finance(n: TNode; kind: Integer): TValue;
     function ArgInt(n: TNode; out i: Int64; out ev: TValue): Boolean;
     function ArgSerial(n: TNode; out serial: Int64; out ev: TValue): Boolean;
     function CondOf(const v: TValue; out b: Boolean): Boolean;
@@ -864,6 +883,7 @@ function ParseCriteria(const v: TValue): TCriteria;
 var
   s, rest: UnicodeString;
   d: TDec;
+  ser: Int64;
 begin
   Result.Op := coEq;
   Result.IsNum := False;
@@ -887,6 +907,12 @@ begin
           Result.IsNum := True;
           Result.Num := d;
         end
+        else if ParseIsoDate(UnicodeString(Trim(string(rest))), ser) or ParseUsDate(UnicodeString(Trim(string(rest))), ser) then
+        begin
+          { a date written out: ">2026-11-15" compares with the dates in the cells }
+          Result.IsNum := True;
+          Result.Num := DecFromInt(ser);
+        end
         else
           Result.Text := Lower(rest);
       end;
@@ -898,6 +924,14 @@ var
   c: Integer;
   lt: UnicodeString;
 begin
+  { an empty cell matches a condition on empty text ("" or "=") and "<>" anything else, but not a "*" }
+  if (v.Kind = vkEmpty) and (not cr.IsNum) then
+    case cr.Op of
+      coEq: Exit(cr.Text = '');
+      coNe: Exit(cr.Text <> '');
+    else
+      Exit(False);
+    end;
   if cr.IsNum then
   begin
     if not (v.Kind in [vkNum, vkBool]) then Exit(cr.Op = coNe);
@@ -940,6 +974,7 @@ begin
   AccHasErr := False;
   AccErr := VEmpty;
   AccLogic := kind = akLogicAnd;
+  AccDates := True;
 end;
 
 procedure TEvaluator.AccNumber(const d: TDec);
@@ -984,7 +1019,11 @@ begin
         end;
       end;
   else
-    if v.Kind = vkNum then AccNumber(v.Num)
+    if v.Kind = vkNum then
+    begin
+      if not v.IsDate then AccDates := False;
+      AccNumber(v.Num);
+    end
     else if v.Kind = vkErr then
     begin
       if not AccHasErr then begin AccHasErr := True; AccErr := v; end;
@@ -1017,7 +1056,11 @@ begin
           VisitAcc(0, 0, v);
       end;
   else
-    if ToNum(v, d) then AccNumber(d)
+    if ToNum(v, d) then
+    begin
+      if not ((v.Kind = vkNum) and v.IsDate) then AccDates := False;
+      AccNumber(d);
+    end
     else if not AccHasErr then begin AccHasErr := True; AccErr := VErr(ecValue); end;
   end;
 end;
@@ -1026,8 +1069,12 @@ function TEvaluator.AggResult: TValue;
 begin
   if AccHasErr and (AccKind <> akCount) and (AccKind <> akCounta) then Exit(AccErr);
   case AccKind of
-    akSum, akMin, akMax:
+    akSum:
       if AccAny then Result := VNum(AccSum) else Result := VNum(DecZero);
+    akMin, akMax:
+      if not AccAny then Result := VNum(DecZero)
+      else if AccDates then Result := VDate(AccSum)        { the earliest or latest of dates is a date }
+      else Result := VNum(AccSum);
     akProduct:
       if AccAny then Result := VNum(AccSum) else Result := VNum(DecZero);
     akCount, akCounta: Result := VInt(AccCount);
@@ -1082,6 +1129,22 @@ begin
   if CritMatch(Crit, v) then Inc(CondCount);
 end;
 
+{ every cell of a range that holds something; when a condition can match an empty cell as well, the empty ones too
+  (as LibreOffice does: COUNTIF(A1:A9;"<>x") counts them) unless the range is huge }
+procedure TEvaluator.VisitRange(a: TNode; matchEmpty: Boolean; visit: TCellVisit);
+var
+  c, r: Integer;
+begin
+  if matchEmpty and (Int64(a.Col2 - a.Col + 1) * (a.Row2 - a.Row + 1) <= 2000000) then
+  begin
+    for r := a.Row to a.Row2 do
+      for c := a.Col to a.Col2 do
+        visit(c, r, Ctx.CellValue(c, r));
+  end
+  else
+    Ctx.VisitStored(a.Col, a.Row, a.Col2, a.Row2, visit);
+end;
+
 { mode 0: SUMIF, 1: COUNTIF, 2: AVERAGEIF }
 function TEvaluator.Conditional(n: TNode; mode: Integer): TValue;
 var
@@ -1111,15 +1174,183 @@ begin
   if mode = 1 then
   begin
     { COUNTIF counts matching cells, whatever they hold }
-    Ctx.VisitStored(rng.Col, rng.Row, rng.Col2, rng.Row2, @VisitCountOnly);
+    VisitRange(rng, CritMatch(Crit, VEmpty), @VisitCountOnly);
     Exit(VInt(CondCount));
   end;
-  Ctx.VisitStored(rng.Col, rng.Row, rng.Col2, rng.Row2, @VisitCond);
+  VisitRange(rng, CritMatch(Crit, VEmpty), @VisitCond);
   if CondHasErr then Exit(CondErr);
   if mode = 0 then Exit(VNum(CondSum));
   if CondCount = 0 then Exit(VErr(ecDiv0));
   if not DecDiv(CondSum, DecFromInt(CondCount), r) then Exit(VErr(ecDiv0));
   Result := VNum(r);
+end;
+
+{ one cell of the first range of SUMIFS, COUNTIFS, AVERAGEIFS, MINIFS or MAXIFS: do all the conditions hold? }
+procedure TEvaluator.VisitMulti(col, row: Integer; const v: TValue);
+var
+  k: Integer;
+  tv: TValue;
+begin
+  for k := 0 to High(MCrit) do
+  begin
+    if k = 0 then tv := v
+    else tv := Ctx.CellValue(MOffC[k] + col - MBaseC, MOffR[k] + row - MBaseR);
+    if not CritMatch(MCrit[k], tv) then Exit;
+  end;
+  if MMode = 1 then
+  begin
+    Inc(CondCount);
+    Exit;
+  end;
+  tv := Ctx.CellValue(MValC + col - MBaseC, MValR + row - MBaseR);
+  if tv.Kind = vkNum then
+  begin
+    CondSum := DecAdd(CondSum, tv.Num);
+    Inc(CondCount);
+    if not tv.IsDate then MDates := False;
+    if (not MAny) or ((MMode = 3) and (DecCmp(tv.Num, MBest) < 0)) or ((MMode = 4) and (DecCmp(tv.Num, MBest) > 0)) then
+      MBest := tv.Num;
+    MAny := True;
+  end
+  else if (tv.Kind = vkErr) and (not CondHasErr) then
+  begin
+    CondHasErr := True;
+    CondErr := tv;
+  end;
+end;
+
+{ mode 0 SUMIFS, 1 COUNTIFS, 2 AVERAGEIFS, 3 MINIFS, 4 MAXIFS.  The range to add up comes first (not for
+  COUNTIFS), then pairs of a range and its condition; all the ranges must be the same size. }
+function TEvaluator.MultiCond(n: TNode; mode: Integer): TValue;
+var
+  first, np, k, w, h, rw, rh: Integer;
+  rng, a: TNode;
+  cv: TValue;
+  r: TDec;
+
+  procedure SizeOf(x: TNode; out cw, ch: Integer);
+  begin
+    if x.Kind = nkRange then begin cw := x.Col2 - x.Col + 1; ch := x.Row2 - x.Row + 1; end
+    else begin cw := 1; ch := 1; end;
+  end;
+
+begin
+  if mode = 1 then first := 0 else first := 1;
+  if (Length(n.Args) - first) mod 2 <> 0 then Exit(VErr(ecValue));
+  np := (Length(n.Args) - first) div 2;
+  MMode := mode;
+  MHasVal := mode <> 1;
+  if MHasVal then
+  begin
+    rng := n.Args[0];
+    if not (rng.Kind in [nkRange, nkRef]) then Exit(VErr(ecValue));
+    MValC := rng.Col;
+    MValR := rng.Row;
+    SizeOf(rng, w, h);
+  end
+  else
+  begin
+    SizeOf(n.Args[0], w, h);
+  end;
+  SetLength(MCrit, np);
+  SetLength(MOffC, np);
+  SetLength(MOffR, np);
+  for k := 0 to np - 1 do
+  begin
+    a := n.Args[first + 2 * k];
+    if not (a.Kind in [nkRange, nkRef]) then Exit(VErr(ecValue));
+    SizeOf(a, rw, rh);
+    if (rw <> w) or (rh <> h) then Exit(VErr(ecValue));
+    MOffC[k] := a.Col;
+    MOffR[k] := a.Row;
+    cv := Eval(n.Args[first + 2 * k + 1]);
+    if cv.Kind = vkErr then Exit(cv);
+    MCrit[k] := ParseCriteria(cv);
+  end;
+  MBaseC := MOffC[0];
+  MBaseR := MOffR[0];
+  CondSum := DecZero;
+  CondCount := 0;
+  CondHasErr := False;
+  MAny := False;
+  MDates := True;
+  MBest := DecZero;
+  a := n.Args[first];
+  if a.Kind = nkRange then VisitRange(a, CritMatch(MCrit[0], VEmpty), @VisitMulti)
+  else VisitMulti(a.Col, a.Row, Ctx.CellValue(a.Col, a.Row));
+  if (mode <> 1) and CondHasErr then Exit(CondErr);
+  case mode of
+    0: Result := VNum(CondSum);
+    1: Result := VInt(CondCount);
+    2:
+      begin
+        if CondCount = 0 then Exit(VErr(ecDiv0));
+        if not DecDiv(CondSum, DecFromInt(CondCount), r) then Exit(VErr(ecDiv0));
+        Result := VNum(r);
+      end;
+  else
+    if not MAny then Result := VNum(DecZero)
+    else if MDates then Result := VDate(MBest)
+    else Result := VNum(MBest);
+  end;
+end;
+
+{ loan arithmetic, with the rate per period and a whole or fractional number of periods:
+  kind 0 PMT(rate, nper, pv, fv, type), 1 FV(rate, nper, pmt, pv, type), 2 PV(rate, nper, pmt, fv, type).
+  Money paid out is negative, as in the spreadsheets. }
+function TEvaluator.Finance(n: TNode; kind: Integer): TValue;
+var
+  rate, nper, x3, x4, typ, one, pvif, af, t, res: TDec;
+  v: TValue;
+
+  function Arg(idx: Integer; def: Integer; out x: TDec; out e: TValue): Boolean;
+  var
+    q: TValue;
+  begin
+    if idx > High(n.Args) then begin x := DecFromInt(def); Exit(True); end;
+    q := Eval(n.Args[idx]);
+    if q.Kind = vkErr then begin e := q; Exit(False); end;
+    if not ToNum(q, x) then begin e := VErr(ecValue); Exit(False); end;
+    Result := True;
+  end;
+
+begin
+  if not Arg(0, 0, rate, v) then Exit(v);
+  if not Arg(1, 0, nper, v) then Exit(v);
+  if not Arg(2, 0, x3, v) then Exit(v);
+  if not Arg(3, 0, x4, v) then Exit(v);
+  if not Arg(4, 0, typ, v) then Exit(v);
+  one := DecFromInt(1);
+  if not DecIsZero(typ) then typ := one;
+  if DecIsZero(rate) then
+  begin
+    { no interest: the payments simply add up }
+    case kind of
+      0:
+        begin
+          if not DecDiv(DecNeg(DecAdd(x3, x4)), nper, res) then Exit(VErr(ecNum));
+        end;
+      1: res := DecNeg(DecAdd(x4, DecMul(x3, nper)));
+      else res := DecNeg(DecAdd(x4, DecMul(x3, nper)));
+    end;
+    Exit(VNum(res));
+  end;
+  if not DecPow(DecAdd(one, rate), nper, pvif) then Exit(VErr(ecNum));
+  { af: what one payment per period is worth at the end, with the payment at the start or the end of the period }
+  if not DecDiv(DecMul(DecAdd(one, DecMul(rate, typ)), DecSub(pvif, one)), rate, af) then Exit(VErr(ecDiv0));
+  case kind of
+    0:
+      begin
+        if not DecDiv(DecNeg(DecAdd(DecMul(x3, pvif), x4)), af, res) then Exit(VErr(ecNum));
+      end;
+    1: res := DecNeg(DecAdd(DecMul(x4, pvif), DecMul(x3, af)));
+  else
+    begin
+      t := DecNeg(DecAdd(x4, DecMul(x3, af)));
+      if not DecDiv(t, pvif, res) then Exit(VErr(ecDiv0));
+    end;
+  end;
+  Result := VNum(res);
 end;
 
 function TEvaluator.Compare(const a, b: TValue): Integer;
@@ -1454,6 +1685,14 @@ begin
         Result := VNum(a);
       end;
     fnSumIf: Result := Conditional(n, 0);
+    fnSumIfs: Result := MultiCond(n, 0);
+    fnCountIfs: Result := MultiCond(n, 1);
+    fnAverageIfs: Result := MultiCond(n, 2);
+    fnMinIfs: Result := MultiCond(n, 3);
+    fnMaxIfs: Result := MultiCond(n, 4);
+    fnPmt: Result := Finance(n, 0);
+    fnFv: Result := Finance(n, 1);
+    fnPv: Result := Finance(n, 2);
     fnCountIf: Result := Conditional(n, 1);
     fnAverageIf: Result := Conditional(n, 2);
     fnDate:

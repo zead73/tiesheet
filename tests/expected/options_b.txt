@@ -1,0 +1,3 @@
+text=15 back=6 border=14 formula=3
+error=10 header=14 select=4
+font=20 paper=0

@@ -10,7 +10,7 @@ It is deliberately small. There are no charts, pivot tables or conditional forma
 LibreOffice. What it does, it tries to do carefully:
 
 - **Exact decimals.** `0.1 + 0.2` is `0.3`, `1/3*3=1` is TRUE, and money adds up to the cent.
-- **The formulas you expect**, about 50 functions (below), `$A$1` references, ranges, error values.
+- **The formulas you expect**, about 60 functions (below), `$A$1` references, ranges, error values.
 - **Dates as dates**: `2026-11-10`, `TODAY()`, `DATEDIF`, `WEEKDAY`, and subtracting two dates gives days.
 - **Plain text everywhere.** A sheet is a `.tsh` file you can read and diff; CSV in and out, with the
   formulas kept or only the results (for sharing).
@@ -36,12 +36,14 @@ The essentials:
 | arrows, Ctrl+arrows | Move; jump to the edge of a block |
 | type, F2 | Enter into a cell; edit what is there |
 | Enter, Tab | Finish and move down / right |
+| arrows in a formula | Pick the cell to write into it (Shift: a block) |
 | Shift+arrows | Select; the status line shows the sum of a selection |
 | Alt+C, Alt+X, Alt+V | Copy / cut / paste (system clipboard; formulas keep working) |
 | Ctrl+D, Ctrl+R | Fill down / right |
 | Ctrl+Z, Ctrl+Shift+Z | Undo / redo |
 | Ctrl++, Ctrl+- | Insert / delete rows (after Ctrl+Space: columns); formulas follow |
 | F3, F4, F5 | Column width, number format, sort |
+| F9 | Screen options: colours, font size, paper |
 | Ctrl+L, Ctrl+S | Open (file picker), save |
 | Ctrl+V, Ctrl+O | Print preview, output as PDF or text |
 
@@ -54,8 +56,8 @@ Ctrl+Space, then F4), which numbers typed into it afterwards take.
 ### Functions
 
 SUM AVERAGE MIN MAX COUNT COUNTA PRODUCT, ABS ROUND ROUNDUP ROUNDDOWN INT MOD POWER SQRT,
-IF AND OR NOT IFERROR, SUMIF COUNTIF AVERAGEIF, LEN LEFT RIGHT MID UPPER LOWER TRIM CONCAT VALUE,
-DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF, ISBLANK ISNUMBER ISTEXT ISERROR.
+IF AND OR NOT IFERROR, SUMIF COUNTIF AVERAGEIF SUMIFS COUNTIFS AVERAGEIFS MINIFS MAXIFS, LEN LEFT RIGHT MID UPPER LOWER TRIM CONCAT VALUE,
+DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF, PMT FV PV, ISBLANK ISNUMBER ISTEXT ISERROR.
 
 Where behaviour was in doubt it was checked against LibreOffice Calc (`tests/oracle/`), and dates
 use the same serial numbers (serial 0 is 1899-12-30).
@@ -98,7 +100,7 @@ loaded at run time, so nothing is linked against them).
 ## Tests
 
 ```
-tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (1097 checks)
+tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (1150 checks)
 tests/run-gui-tests.sh [win]  # the real program driven by scripted keystrokes, headless
 ```
 

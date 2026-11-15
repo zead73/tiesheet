@@ -4,7 +4,8 @@
     tsapp_draw.inc    drawing the grid, the input line and the status line
     tsapp_edit.inc    moving, entering, selecting, the clipboard, undo
     tsapp_files.inc   loading, saving, quitting
-    tsapp_screens.inc help, column width, format, find, go to }
+    tsapp_screens.inc help, column width, format, find, go to
+    tsapp_options.inc the screen options (F9) }
 unit tsapp;
 
 {$mode objfpc}{$H+}
@@ -72,6 +73,10 @@ type
     Editing: Boolean;
     EditBuf: UnicodeString;
     EditPos: Integer;
+    { ---- pointing at cells while typing a formula ---- }
+    PointOn, PtKeep: Boolean;     { PtKeep: the start of a typed A1: range stays }
+    PtStart, PtLen: Integer;      { where the inserted reference sits in EditBuf }
+    PtC, PtR, PtAC, PtAR: Integer;{ the cell pointed at and the other end of the range }
     { ---- files ---- }
     FileName: string;
     FileKind: TFileKind;
@@ -105,6 +110,7 @@ type
     PkPlaces: TPlaces;
     PkPlaceSel: Integer;
     PrevPage, PrevLeft, PrevTop: Integer;
+    OptSel: Integer;
     FullScreen, Overlay: TProc;
     { ---- events and scripts ---- }
     Script: TStringList;
@@ -152,6 +158,8 @@ type
     procedure CommitEdit(dc, dr: Integer);
     procedure CancelEdit;
     procedure EditInsert(const s: UnicodeString);
+    function PointEligible: Boolean;
+    procedure PointMove(dc, dr: Integer; extend: Boolean);
     { commands }
     procedure HandleEvent(var ev: TKeyEv);
     procedure HandleKey(const ev: TKeyEv);
@@ -196,6 +204,10 @@ type
     procedure DoPreview;
     procedure DrawPreview;
     procedure DoOutput;
+    function OptValue(i: Integer; out swatch: Integer): string;
+    procedure DrawOptions;
+    procedure OptAdjust(dir: Integer);
+    procedure DoOptions;
   end;
 
 implementation
@@ -284,5 +296,6 @@ end;
 {$I tsapp_screens.inc}
 {$I tsapp_print.inc}
 {$I tsapp_picker.inc}
+{$I tsapp_options.inc}
 
 end.

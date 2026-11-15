@@ -242,6 +242,47 @@ begin
     T('=COUNTIF(F1:F5,5)', '1');
     T('=AVERAGEIF(F1:F5,"apple",G1:G5)', '20');
     T('=AVERAGEIF(F1:F5,"zzz",G1:G5)', '#DIV/0!');
+    { empty cells match a condition on nothing, and "<>" anything (checked against LibreOffice) }
+    T('=COUNTIF(F1:F6,"<>apple")', '4');
+    T('=COUNTIF(F1:F6,"")', '1');
+    T('=COUNTIF(F1:F6,"=")', '1');
+    T('=COUNTIF(F1:F6,"<>")', '5');
+    T('=COUNTIF(F1:F6,"*")', '4');
+    T('=COUNTIF(G1:G6,"<>20")', '5');
+    T('=SUMIF(F1:F6,"<>apple",G1:G6)', '170');
+    { several conditions }
+    T('=SUMIFS(G1:G6,F1:F6,"apple")', '40');
+    T('=SUMIFS(G1:G6,F1:F6,"apple",G1:G6,">10")', '30');
+    T('=SUMIFS(G1:G6,F1:F6,"zzz")', '0');
+    T('=SUMIFS(G1:G5,F1:F6,"apple")', '#VALUE!');
+    T('=COUNTIFS(F1:F6,"apple",G1:G6,">10")', '1');
+    T('=COUNTIFS(G1:G6,">20")', '4');
+    T('=COUNTIFS(F1:F6,"<>apple")', '4');
+    T('=COUNTIFS(F1:F6,"*an*")', '1');
+    T('=COUNTIFS(F1:F6,"apple",G1:G5,">10")', '#VALUE!');
+    T('=AVERAGEIFS(G1:G6,F1:F6,"apple")', '20');
+    T('=AVERAGEIFS(G1:G6,F1:F6,"zzz")', '#DIV/0!');
+    T('=MINIFS(G1:G6,F1:F6,"apple")', '10');
+    T('=MAXIFS(G1:G6,F1:F6,"apple")', '30');
+    T('=MAXIFS(G1:G6,F1:F6,"zzz")', '0');
+    T('=MINIFS(G1:G6,F1:F6,"zzz")', '0');
+    T('=MINIFS(G1:G6,G1:G6,">25",G1:G6,"<55")', '30');
+    { loans: money paid out is negative }
+    T('=PMT(0.05,10,1000)', '-129.504574965457');
+    T('=PMT(0.05,10,1000,0,1)', '-123.337690443292');
+    T('=PMT(0,10,1000)', '-100');
+    T('=PMT(0.05,10,1000,500)', '-169.256862448185');
+    T('=PMT(0.05,0,1000)', '#NUM!');
+    T('=PMT(0,0,1000)', '#NUM!');
+    T('=PMT(0.01,12,10000)', '-888.487886783417');
+    T('=FV(0.05,10,-100)', '1257.78925355488');
+    T('=FV(0.05,10,-100,-50,1)', '1402.1234475715');
+    T('=FV(0,10,-100)', '1000');
+    T('=ROUND(PV(0.05,10,-100),6)', '772.173493');
+    T('=ROUND(PV(0.05,10,-100,500,1),6)', '503.825541');
+    T('=PV(0,10,-100,20)', '980');
+    T('=ROUND(PMT(0.05/12,36,5000),2)', '-149.85');
+    T('=ROUND(-PMT(0.05/12,36,5000)*36,2)', '5394.76');
 
     { dates: a date function shows as a date until a number is made of it }
     T('=DATE(2026,11,10)', '2026-11-10');
@@ -602,6 +643,54 @@ begin
 end;
 
 { ---- dates typed month first ---- }
+
+procedure TestPayments;
+var
+  sh: TSheet;
+
+  procedure E(c, r: Integer; const f: string; const shown: string);
+  begin
+    sh.SetEntry(c, r, UnicodeString(f));
+    CheckEq(string(sh.Display(c, r)), shown, f);
+  end;
+
+begin
+  sh := TSheet.Create;
+  try
+    sh.Today := 46341;                          { 2026-11-15 }
+    sh.SetEntry(0, 0, 'Date');
+    sh.SetEntry(1, 0, 'Paid');
+    sh.SetEntry(0, 1, '8/1/2026');
+    sh.SetEntry(1, 1, '1000');
+    sh.SetEntry(0, 2, '9/1/2026');
+    sh.SetEntry(1, 2, '500');
+    sh.SetEntry(0, 3, '11/1/2026');
+    sh.SetEntry(1, 3, '1000');
+    sh.SetEntry(0, 4, '12/1/2026');
+    sh.SetEntry(1, 4, '250');
+    { the earliest and latest of dates are dates }
+    E(3, 0, '=MAX(A2:A5)', '2026-12-01');
+    E(3, 1, '=MIN(A2:A5)', '2026-08-01');
+    E(3, 2, '=MAX(A2:A5)-MIN(A2:A5)', '122');
+    E(3, 3, '=MAX(B2:B5)', '1000');
+    E(3, 4, '=EDATE(MAX(A2:A4),1)', '2026-12-01');
+    { the next date still to come, and how long to wait }
+    E(4, 0, '=MINIFS(A2:A5,A2:A5,">"&TODAY())', '2026-12-01');
+    E(4, 1, '=MINIFS(A2:A5,A2:A5,">"&TODAY())-TODAY()', '16');
+    E(4, 2, '=MAXIFS(A2:A5,A2:A5,"<="&TODAY())', '2026-11-01');
+    E(4, 3, '=SUMIFS(B2:B5,A2:A5,"<="&TODAY())', '2500');
+    E(4, 4, '=SUMIFS(B2:B5,A2:A5,">2026-09-01",A2:A5,"<2026-12-01")', '1000');
+    E(5, 0, '=COUNTIFS(A2:A5,">8/1/2026")', '3');
+    E(5, 1, '=SUMIF(A2:A5,">="&DATE(2026,11,1),B2:B5)', '1250');
+    E(5, 2, '=MINIFS(A2:A5,A2:A5,">"&DATE(2030,1,1))', '0');
+    { owing }
+    sh.SetEntry(8, 0, '7000');
+    E(5, 3, '=I1-SUM(B2:B5)', '4250');
+    E(5, 4, '=I1-SUMIFS(B2:B5,A2:A5,"<="&TODAY())', '4500');
+  finally
+    sh.Free;
+  end;
+end;
 
 procedure TestUsDates;
 var

@@ -183,6 +183,7 @@ begin
   TestFormulaRefusals;
   TestEntries;
   TestUsDates;
+  TestPayments;
   TestFormatting;
   TestRecalc;
   TestShifting;

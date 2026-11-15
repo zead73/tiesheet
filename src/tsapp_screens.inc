@@ -129,6 +129,7 @@ begin
   t.Add('Enter / Tab|Finish and go down / right (with Shift: up / left)');
   t.Add('Up / Down|Finish and go up / down');
   t.Add('Esc|Cancel the entry');
+  t.Add('Arrows in a formula|Where a cell is expected (after =  (  ,  or an operator such as + -  *  /  :) the arrow keys pick the cell and write its name; Shift+arrows pick a block; type A1: first and the arrows pick the far corner.  Any other key goes back to editing the text');
   t.Add('Delete, Ctrl+E|Clear the selected cells');
   t.Add('');
   t.Add('#Selecting');
@@ -148,6 +149,7 @@ begin
   t.Add('F3|Column width');
   t.Add('Ctrl++ / Ctrl+-|Insert / delete the selected rows (after Ctrl+Space: the selected columns); formulas follow, and what pointed at a deleted row shows #REF!');
   t.Add('F5|Sort a block of rows by one column: you are asked which column, which way, and whether the first row is a heading.  One cell selected: the block around it');
+  t.Add('F9|Screen options: the colours (text, background, border, formula results, errors, headers, selection), font size and the paper for printing.  Up/Down choose, Left/Right change; Esc closes and keeps them');
   t.Add('F4|Format the selected cells: general, number, currency, percent, date.  With Ctrl+Space first, the whole column gets the format, also for numbers typed later');
   t.Add('');
   t.Add('#Printing');
@@ -174,11 +176,12 @@ begin
   t.Add('#Formulas');
   t.Add('Operators|+ - * / ^ & (join text) % and = <> < > <= >=');
   t.Add('Cells|A1, $A$1 (fixed), A1:B9 (a block)');
-  t.Add('Sums|SUM AVERAGE MIN MAX COUNT COUNTA PRODUCT SUMIF COUNTIF AVERAGEIF');
+  t.Add('Sums|SUM AVERAGE MIN MAX COUNT COUNTA PRODUCT SUMIF COUNTIF AVERAGEIF SUMIFS COUNTIFS AVERAGEIFS MINIFS MAXIFS');
   t.Add('Numbers|ABS ROUND ROUNDUP ROUNDDOWN INT MOD POWER SQRT');
   t.Add('Logic|IF AND OR NOT IFERROR ISBLANK ISNUMBER ISTEXT ISERROR');
   t.Add('Text|LEN LEFT RIGHT MID UPPER LOWER TRIM CONCAT VALUE');
-  t.Add('Dates|DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF');
+  t.Add('Dates|DATE YEAR MONTH DAY WEEKDAY TODAY DAYS EDATE DATEDIF; MIN and MAX of dates are dates');
+  t.Add('Loans|PMT FV PV (rate per period, number of periods, ...); money paid out is negative');
   t.Add('Numbers are exact: 0.1 + 0.2 is 0.3, and money adds up to the cent.');
   t.Add('');
 end;

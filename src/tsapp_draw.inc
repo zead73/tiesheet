@@ -60,15 +60,18 @@ end;
 
 procedure TApp.EnsureVisible;
 var
-  sum, c: Integer;
+  sum, c, vc, vr: Integer;
 begin
-  if CurR < TopRow then TopRow := CurR;
-  if CurR >= TopRow + VisRows then TopRow := CurR - VisRows + 1;
+  vc := CurC;
+  vr := CurR;
+  if Editing and PointOn then begin vc := PtC; vr := PtR; end;     { follow the cell being pointed at }
+  if vr < TopRow then TopRow := vr;
+  if vr >= TopRow + VisRows then TopRow := vr - VisRows + 1;
   if TopRow < 0 then TopRow := 0;
-  if CurC < LeftCol then LeftCol := CurC;
+  if vc < LeftCol then LeftCol := vc;
   sum := 0;
-  for c := LeftCol to CurC do Inc(sum, Sheet.ColWidth(c));
-  while (GutterW + sum > Gfx.Cols) and (LeftCol < CurC) do
+  for c := LeftCol to vc do Inc(sum, Sheet.ColWidth(c));
+  while (GutterW + sum > Gfx.Cols) and (LeftCol < vc) do
   begin
     Dec(sum, Sheet.ColWidth(LeftCol));
     Inc(LeftCol);
@@ -174,7 +177,8 @@ procedure TApp.DrawGrid;
 var
   i, r, c, x, y, w, gw, avail, k, xx, c1, r1, c2, r2, cw, st: Integer;
   s: UnicodeString;
-  right, inSel, isCur: Boolean;
+  right, inSel, isCur, inPt: Boolean;
+  pc1, pr1, pc2, pr2: Integer;
   fg, head, textC, backC: LongWord;
   num: string;
 begin
@@ -182,6 +186,8 @@ begin
   textC := RGBOf(Cfg.ColText);
   backC := RGBOf(Cfg.ColBack);
   SelRect(c1, r1, c2, r2);
+  if PtC < PtAC then begin pc1 := PtC; pc2 := PtAC; end else begin pc1 := PtAC; pc2 := PtC; end;
+  if PtR < PtAR then begin pr1 := PtR; pr2 := PtAR; end else begin pr1 := PtAR; pr2 := PtR; end;
   gw := GutterW;
   for i := 0 to VisRows - 1 do
   begin
@@ -207,10 +213,12 @@ begin
       if x + w > Gfx.Cols then w := Gfx.Cols - x;
       inSel := SelActive and (c >= c1) and (c <= c2) and (r >= r1) and (r <= r2);
       isCur := (c = CurC) and (r = CurR);
+      inPt := Editing and PointOn and (c >= pc1) and (c <= pc2) and (r >= pr1) and (r <= pr2);
       if isCur then Gfx.FillCells(x, y, w, 1, textC)
+      else if inPt then Gfx.FillCells(x, y, w, 1, RGBOf(Cfg.ColFormula))
       else if inSel then Gfx.FillCells(x, y, w, 1, RGBOf(Cfg.ColSelect));
       CellLook(c, r, s, right, fg);
-      if isCur then fg := backC;
+      if isCur or inPt then fg := backC;
       st := ST_REGULAR;
       if isCur then st := ST_BOLD;
       if s <> '' then

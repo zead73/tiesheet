@@ -198,6 +198,7 @@ begin
   if replace then EditBuf := initial else EditBuf := Sheet.GetRaw(CurC, CurR);
   EditPos := Length(EditBuf);
   Editing := True;
+  PointOn := False;
   SelActive := False;
   SelCols := False;
   FollowCursor := True;
@@ -213,11 +214,77 @@ begin
     if (t[i] = #10) or (t[i] = #13) or (t[i] = #9) then t[i] := ' ';
   Insert(t, EditBuf, EditPos + 1);
   Inc(EditPos, Length(t));
+  PointOn := False;
+end;
+
+{ ---- pointing: while a formula is typed and a cell is expected, the arrow keys pick it ---- }
+
+{ true when the text just before the cursor leaves room for a reference: =  (  ,  ;  an operator, or a colon }
+function TApp.PointEligible: Boolean;
+var
+  i, q: Integer;
+begin
+  Result := False;
+  if (EditPos < 1) or (Length(EditBuf) = 0) or (EditBuf[1] <> '=') then Exit;
+  q := 0;
+  for i := 1 to EditPos do
+    if EditBuf[i] = '"' then Inc(q);
+  if Odd(q) then Exit;                       { inside a piece of text }
+  i := EditPos;
+  while (i > 1) and (EditBuf[i] = ' ') do Dec(i);
+  Result := (i >= 1) and (EditBuf[i] in ['=', '(', ',', ';', '+', '-', '*', '/', '^', '&', '<', '>', ':']);
+end;
+
+procedure TApp.PointMove(dc, dr: Integer; extend: Boolean);
+var
+  j, c, r, c1, r1, c2, r2: Integer;
+  tok, txt: UnicodeString;
+begin
+  if not PointOn then
+  begin
+    PointOn := True;
+    PtKeep := False;
+    PtStart := EditPos + 1;
+    PtLen := 0;
+    PtC := CurC;
+    PtR := CurR;
+    PtAC := CurC;
+    PtAR := CurR;
+    { after A1: the range starts at A1, which is replaced along with the colon }
+    if (EditPos > 1) and (EditBuf[EditPos] = ':') then
+    begin
+      j := EditPos - 1;
+      while (j >= 1) and (EditBuf[j] in ['A'..'Z', 'a'..'z', '0'..'9', '$']) do Dec(j);
+      tok := Copy(EditBuf, j + 1, EditPos - 1 - j);
+      if (tok <> '') and ParseCellName(tok, c, r) then
+      begin
+        PtC := c; PtR := r; PtAC := c; PtAR := r;
+        PtStart := j + 1;
+        PtLen := EditPos - j;
+        PtKeep := True;
+      end;
+    end;
+  end;
+  PtC := PtC + dc;
+  PtR := PtR + dr;
+  if PtC < 0 then PtC := 0;
+  if PtC > MAX_COL then PtC := MAX_COL;
+  if PtR < 0 then PtR := 0;
+  if PtR > MAX_ROW then PtR := MAX_ROW;
+  if not (extend or PtKeep) then begin PtAC := PtC; PtAR := PtR; end;
+  if PtAC < PtC then begin c1 := PtAC; c2 := PtC; end else begin c1 := PtC; c2 := PtAC; end;
+  if PtAR < PtR then begin r1 := PtAR; r2 := PtR; end else begin r1 := PtR; r2 := PtAR; end;
+  txt := UnicodeString(CellName(c1, r1));
+  if (c1 <> c2) or (r1 <> r2) then txt := txt + ':' + UnicodeString(CellName(c2, r2));
+  EditBuf := Copy(EditBuf, 1, PtStart - 1) + txt + Copy(EditBuf, PtStart + PtLen, MaxInt);
+  PtLen := Length(txt);
+  EditPos := PtStart - 1 + PtLen;
 end;
 
 procedure TApp.CancelEdit;
 begin
   Editing := False;
+  PointOn := False;
 end;
 
 procedure TApp.CommitEdit(dc, dr: Integer);
@@ -228,6 +295,7 @@ begin
   if EditBuf = Sheet.GetRaw(CurC, CurR) then
   begin
     Editing := False;
+    PointOn := False;
     MoveCursor(CurC + dc, CurR + dr, False);
     Exit;
   end;
@@ -239,6 +307,7 @@ begin
     Exit;
   end;
   Editing := False;
+  PointOn := False;
   Changed(before);
   MoveCursor(CurC + dc, CurR + dr, False);
 end;
@@ -264,6 +333,19 @@ begin
     end;
     Exit;
   end;
+  { the arrow keys pick a cell for the formula when one is expected (Shift: a range); anything else ends it }
+  if ((ev.Sym = SDLK_UP) or (ev.Sym = SDLK_DOWN) or (ev.Sym = SDLK_LEFT) or (ev.Sym = SDLK_RIGHT)) and (not ev.Ctrl) and (not ev.Alt)
+    and (PointOn or PointEligible) then
+  begin
+    case ev.Sym of
+      SDLK_UP: PointMove(0, -1, ev.Shift);
+      SDLK_DOWN: PointMove(0, 1, ev.Shift);
+      SDLK_LEFT: PointMove(-1, 0, ev.Shift);
+      SDLK_RIGHT: PointMove(1, 0, ev.Shift);
+    end;
+    Exit;
+  end;
+  PointOn := False;
   case ev.Sym of
     SDLK_ESCAPE: CancelEdit;
     SDLK_RETURN, SDLK_KP_ENTER: CommitEdit(0, dir);
@@ -532,7 +614,7 @@ begin
     SDLK_F3: begin DoWidth; Exit; end;
     SDLK_F4: begin DoFormat; Exit; end;
     SDLK_F5: begin DoSort; Exit; end;
-    SDLK_F9: begin SetMsg('Screen options are not built yet'); Exit; end;
+    SDLK_F9: begin DoOptions; Exit; end;
   end;
   if ev.Alt then
   begin

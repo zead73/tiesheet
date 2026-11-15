@@ -30,6 +30,7 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | Enter / Tab | Finish and move down / right (with Shift: up / left); outside an entry they just move |
 | Up / Down | Finish and move |
 | Esc | Cancel the entry |
+| arrows in a formula | Where a cell is expected (after `=`, `(`, `,`, `;`, an operator or `:`) the arrows pick the cell and write its name; Shift+arrows pick a block; after typing `A1:` the arrows pick the far corner. Any other key goes back to editing the text |
 | Delete, Ctrl+E | Clear the selected cells |
 
 ## Copying, filling, undo
@@ -48,6 +49,7 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | Ctrl++ / Ctrl+- | Insert / delete the selected rows (after Ctrl+Space: the selected columns); formulas follow, and what pointed at a deleted row or column shows `#REF!` |
 | F5 | Sort a block of rows by one column (asks which column, which way, and whether the first row is a heading); with one cell selected, the block around it |
 | F3 | Column width |
+| F9 | Screen options: colours (text, background, border, formula results, errors, headers, selection), font size, paper for printing. Up/Down choose, Left/Right change, Esc closes; the choices are saved |
 | F4 | Format the selection: general, number, currency, percent, date (after Ctrl+Space, the whole column, also for numbers typed later) |
 | Ctrl+L | Open a file (`.tsh` or `.csv`) with the picker |
 | Ctrl+S / Ctrl+Shift+S | Save / save under another name (the picker again; a name that exists asks before it is replaced) |
@@ -60,8 +62,6 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 |------|--------|
 | Ctrl+V | Print preview of the selected cells, or of the whole sheet (PgUp/PgDn page, arrows scroll, P switches Letter / A4, Esc closes) |
 | Ctrl+O | Output: a PDF or a text file |
-
-F9 (screen options) is kept as in TiePaper's F2 but is not built yet.
 
 ## The file picker
 
