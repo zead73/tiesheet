@@ -30,7 +30,7 @@ letters mean Ctrl+Shift. Press **F1** in the program for this list.
 | Enter / Tab | Finish and move down / right (with Shift: up / left); outside an entry they just move |
 | Up / Down | Finish and move |
 | Esc | Cancel the entry |
-| arrows in a formula | Where a cell is expected (after `=`, `(`, `,`, `;`, an operator or `:`) the arrows pick the cell and write its name; Shift+arrows pick a block; after typing `A1:` the arrows pick the far corner. Any other key goes back to editing the text |
+| arrows in a formula | Right after you type `=`, `(`, `,`, `;`, an operator or `:` the arrows pick a cell and write its name; Shift+arrows pick a block; after typing `A1:` the arrows pick the far corner. Any other key goes back to editing the text; with F2 the arrows just move through the text until you type something |
 | Delete, Ctrl+E | Clear the selected cells |
 
 ## Copying, filling, undo

@@ -115,3 +115,42 @@ key down
 text 7
 key return
 dump build/test-out/point_g.txt
+# moving the cursor through a formula being edited never picks anything: F2 on =A1+B1, Left x3
+key ctrl+home
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+key down
+text =A1+B1
+key return
+key up
+key f2
+key left
+key left
+key left
+key left
+key left
+key return
+dump build/test-out/point_h.txt
+# F2, Home, Right x2: still nothing is picked
+key up
+key f2
+key home
+key right
+key right
+key return
+dump build/test-out/point_i.txt
+# but typing a + at the end and then an arrow does pick
+key up
+key f2
+key end
+text +
+key down
+key down
+key return
+dump build/test-out/point_j.txt

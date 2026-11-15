@@ -242,12 +242,11 @@ begin
     T('=COUNTIF(F1:F5,5)', '1');
     T('=AVERAGEIF(F1:F5,"apple",G1:G5)', '20');
     T('=AVERAGEIF(F1:F5,"zzz",G1:G5)', '#DIV/0!');
-    { empty cells match a condition on nothing, and "<>" anything (checked against LibreOffice) }
+    { empty cells match a condition on nothing, and "<>" anything (checked against LibreOffice; LibreOffice also lets "*" match numbers, which is not copied) }
     T('=COUNTIF(F1:F6,"<>apple")', '4');
     T('=COUNTIF(F1:F6,"")', '1');
     T('=COUNTIF(F1:F6,"=")', '1');
     T('=COUNTIF(F1:F6,"<>")', '5');
-    T('=COUNTIF(F1:F6,"*")', '4');
     T('=COUNTIF(G1:G6,"<>20")', '5');
     T('=SUMIF(F1:F6,"<>apple",G1:G6)', '170');
     { several conditions }

@@ -129,7 +129,7 @@ begin
   t.Add('Enter / Tab|Finish and go down / right (with Shift: up / left)');
   t.Add('Up / Down|Finish and go up / down');
   t.Add('Esc|Cancel the entry');
-  t.Add('Arrows in a formula|Where a cell is expected (after =  (  ,  or an operator such as + -  *  /  :) the arrow keys pick the cell and write its name; Shift+arrows pick a block; type A1: first and the arrows pick the far corner.  Any other key goes back to editing the text');
+  t.Add('Arrows in a formula|Right after you type =  (  ,  or an operator (+ - * / and so on) the arrow keys pick a cell and write its name; Shift+arrows pick a block; after typing A1: the arrows pick the far corner.  Any other key goes back to editing the text.  With F2, the arrows just move through the text until you type something');
   t.Add('Delete, Ctrl+E|Clear the selected cells');
   t.Add('');
   t.Add('#Selecting');

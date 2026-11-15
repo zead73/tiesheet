@@ -75,6 +75,7 @@ type
     EditPos: Integer;
     { ---- pointing at cells while typing a formula ---- }
     PointOn, PtKeep: Boolean;     { PtKeep: the start of a typed A1: range stays }
+    PtTyped: Boolean;             { the last thing done was typing: only then do the arrows pick a cell }
     PtStart, PtLen: Integer;      { where the inserted reference sits in EditBuf }
     PtC, PtR, PtAC, PtAR: Integer;{ the cell pointed at and the other end of the range }
     { ---- files ---- }

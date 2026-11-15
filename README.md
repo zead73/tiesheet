@@ -100,7 +100,7 @@ loaded at run time, so nothing is linked against them).
 ## Tests
 
 ```
-tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (1150 checks)
+tests/run-tests.sh [win]      # the engine: decimals, formulas, recalculation, files, printing (1149 checks)
 tests/run-gui-tests.sh [win]  # the real program driven by scripted keystrokes, headless
 ```
 

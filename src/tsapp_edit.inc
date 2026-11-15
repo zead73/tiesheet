@@ -199,6 +199,7 @@ begin
   EditPos := Length(EditBuf);
   Editing := True;
   PointOn := False;
+  PtTyped := replace;          { F2 edits the text: the arrows move through it until something is typed }
   SelActive := False;
   SelCols := False;
   FollowCursor := True;
@@ -215,6 +216,7 @@ begin
   Insert(t, EditBuf, EditPos + 1);
   Inc(EditPos, Length(t));
   PointOn := False;
+  PtTyped := True;
 end;
 
 { ---- pointing: while a formula is typed and a cell is expected, the arrow keys pick it ---- }
@@ -335,7 +337,7 @@ begin
   end;
   { the arrow keys pick a cell for the formula when one is expected (Shift: a range); anything else ends it }
   if ((ev.Sym = SDLK_UP) or (ev.Sym = SDLK_DOWN) or (ev.Sym = SDLK_LEFT) or (ev.Sym = SDLK_RIGHT)) and (not ev.Ctrl) and (not ev.Alt)
-    and (PointOn or PointEligible) then
+    and (PointOn or (PtTyped and PointEligible)) then
   begin
     case ev.Sym of
       SDLK_UP: PointMove(0, -1, ev.Shift);
@@ -346,6 +348,7 @@ begin
     Exit;
   end;
   PointOn := False;
+  PtTyped := False;
   case ev.Sym of
     SDLK_ESCAPE: CancelEdit;
     SDLK_RETURN, SDLK_KP_ENTER: CommitEdit(0, dir);
